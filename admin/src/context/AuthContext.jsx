@@ -15,23 +15,30 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
-    checkAuth();
+    if (!checking) {
+      checkAuth();
+    }
   }, []);
 
   const checkAuth = async () => {
+    setChecking(true);
     const token = localStorage.getItem('token');
     if (token) {
       try {
         const response = await authAPI.getMe();
         setUser(response.data);
       } catch (error) {
+        console.error('Auth check failed:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        setUser(null);
       }
     }
     setLoading(false);
+    setChecking(false);
   };
 
   const login = async (credentials) => {
@@ -43,6 +50,7 @@ export const AuthProvider = ({ children }) => {
       toast.success('Connexion réussie !');
       return response;
     } catch (error) {
+      console.error('Login error:', error);
       toast.error(error.message || 'Erreur de connexion');
       throw error;
     }
