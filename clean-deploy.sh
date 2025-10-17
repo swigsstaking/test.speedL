@@ -143,7 +143,13 @@ pm2 start server.js --name swigs-api
 pm2 save
 pm2 startup
 
-# Recharger Nginx
+# Vérifier et démarrer Nginx
+if ! sudo systemctl is-active --quiet nginx; then
+    echo "Nginx n'est pas actif, démarrage..."
+    sudo systemctl start nginx
+fi
+
+# Tester et recharger Nginx
 sudo nginx -t && sudo systemctl reload nginx
 
 echo -e "${GREEN}✅ Services démarrés${NC}"
