@@ -1,10 +1,23 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Search, FileText, Image, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
 import Logo from './Logo';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const { sites, currentSite, selectSite, loading } = useSite();
+  const [showSiteSelector, setShowSiteSelector] = useState(false);
+
+  const navItems = [
+    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/courses', icon: BookOpen, label: 'Formations' },
+    { to: '/seo', icon: Search, label: 'SEO' },
+    { to: '/content', icon: FileText, label: 'Contenu' },
+    { to: '/media', icon: Image, label: 'Médias' },
+    { to: '/settings', icon: Settings, label: 'Paramètres' },
+  ];
 
   return (
     <div className="flex flex-col h-screen w-64 bg-dark-900 border-r border-dark-800">
@@ -13,15 +26,68 @@ const Sidebar = () => {
         <Logo />
       </div>
 
+      {/* Site Selector */}
+      {!loading && sites.length > 0 && (
+        <div className="p-4 border-b border-dark-800">
+          <div className="relative">
+            <button
+              onClick={() => setShowSiteSelector(!showSiteSelector)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                {currentSite?.logo && (
+                  <img src={currentSite.logo} alt="" className="w-6 h-6 rounded" />
+                )}
+                <span className="text-sm font-medium text-gray-200 truncate">
+                  {currentSite?.name || 'Sélectionner un site'}
+                </span>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showSiteSelector ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showSiteSelector && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-dark-800 border border-dark-700 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+                {sites.map((site) => (
+                  <button
+                    key={site._id}
+                    onClick={() => {
+                      selectSite(site);
+                      setShowSiteSelector(false);
+                    }}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-dark-700 transition-colors ${
+                      currentSite?._id === site._id ? 'bg-dark-700' : ''
+                    }`}
+                  >
+                    {site.logo && (
+                      <img src={site.logo} alt="" className="w-6 h-6 rounded" />
+                    )}
+                    <span className="text-sm text-gray-200 truncate">{site.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        <NavLink
-          to="/"
-          className="flex items-center space-x-3 px-4 py-3 rounded-lg bg-primary-600 text-white"
-        >
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="font-medium">Dashboard</span>
-        </NavLink>
+        {navItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) =>
+              `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                isActive
+                  ? 'bg-primary-600 text-white'
+                  : 'text-gray-400 hover:bg-dark-800 hover:text-gray-200'
+              }`
+            }
+          >
+            <item.icon className="w-5 h-5" />
+            <span className="font-medium">{item.label}</span>
+          </NavLink>
+        ))}
       </nav>
 
       {/* User Info & Logout */}

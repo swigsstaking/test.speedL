@@ -15,12 +15,18 @@ export const SiteProvider = ({ children }) => {
   const [sites, setSites] = useState([]);
   const [currentSite, setCurrentSite] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingStarted, setLoadingStarted] = useState(false);
 
   useEffect(() => {
-    loadSites();
-  }, []);
+    if (!loadingStarted) {
+      loadSites();
+    }
+  }, [loadingStarted]);
 
   const loadSites = async () => {
+    if (loadingStarted) return; // Prevent multiple calls
+    setLoadingStarted(true);
+    
     try {
       const response = await sitesAPI.getAll();
       setSites(response.data);
