@@ -23,7 +23,13 @@ const siteSchema = new mongoose.Schema({
     trim: true,
   },
   logo: {
-    type: String,
+    url: {
+      type: String,
+    },
+    alt: {
+      type: String,
+      default: 'Logo',
+    },
   },
   theme: {
     primaryColor: {
@@ -46,6 +52,7 @@ const siteSchema = new mongoose.Schema({
     city: String,
     postalCode: String,
     country: String,
+    whatsapp: String,
   },
   social: {
     facebook: String,
