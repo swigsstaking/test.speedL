@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSite } from '../context/SiteContext';
 import { seoAPI } from '../services/api';
@@ -30,30 +30,32 @@ const SEO = () => {
     queryKey: ['seo', currentSite?._id, selectedPage],
     queryFn: () => seoAPI.getAll({ siteId: currentSite?._id, page: selectedPage }),
     enabled: !!currentSite,
-    onSuccess: (data) => {
-      if (data?.data?.[0]) {
-        const seo = data.data[0];
-        setFormData({
-          title: seo.title || '',
-          description: seo.description || '',
-          keywords: seo.keywords || [],
-          ogTitle: seo.ogTitle || '',
-          ogDescription: seo.ogDescription || '',
-          robots: seo.robots || 'index,follow',
-        });
-      } else {
-        // Reset form for new page
-        setFormData({
-          title: '',
-          description: '',
-          keywords: [],
-          ogTitle: '',
-          ogDescription: '',
-          robots: 'index,follow',
-        });
-      }
-    },
   });
+
+  // Préremplir le formulaire quand les données SEO changent
+  useEffect(() => {
+    if (seoData?.data?.[0]) {
+      const seo = seoData.data[0];
+      setFormData({
+        title: seo.title || '',
+        description: seo.description || '',
+        keywords: seo.keywords || [],
+        ogTitle: seo.ogTitle || '',
+        ogDescription: seo.ogDescription || '',
+        robots: seo.robots || 'index,follow',
+      });
+    } else {
+      // Reset form for new page
+      setFormData({
+        title: '',
+        description: '',
+        keywords: [],
+        ogTitle: '',
+        ogDescription: '',
+        robots: 'index,follow',
+      });
+    }
+  }, [seoData, selectedPage]);
 
   const saveMutation = useMutation({
     mutationFn: (data) => seoAPI.upsert(data),
