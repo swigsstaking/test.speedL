@@ -62,16 +62,34 @@ sudo ln -sf /etc/nginx/sites-available/admin /etc/nginx/sites-enabled/
 # 7. Supprimer la config par défaut de Nginx (si elle existe)
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# 8. Configurer le backend
+# 7. Configurer le backend automatiquement
+chmod +x setup-env.sh
+./setup-env.sh
+
+**Le script va automatiquement :**
+- ✅ Créer le fichier `.env`
+- ✅ Générer un JWT_SECRET sécurisé
+- ✅ Détecter et configurer MongoDB
+- ✅ Configurer NODE_ENV=production
+- ✅ Créer le dossier uploads
+- ✅ Proposer d'initialiser la base de données
+
+**OU configuration manuelle :**
+```bash
 cd backend
 cp .env.example .env
+
+# Générer un JWT_SECRET
+openssl rand -base64 64
+
+# Éditer le .env
 nano .env
 ```
 
 **Dans le fichier `.env`, modifiez :**
 ```env
 NODE_ENV=production
-JWT_SECRET=CHANGEZ_MOI_PAR_UNE_VRAIE_CLE_SECRETE_LONGUE
+JWT_SECRET=VOTRE_CLE_GENEREE_ICI
 CORS_ORIGIN=https://swigs.online,https://www.swigs.online,https://admin.swigs.online,http://swigs.online,http://www.swigs.online,http://admin.swigs.online
 ```
 
