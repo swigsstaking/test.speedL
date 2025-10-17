@@ -13,10 +13,14 @@ export const uploadFile = async (req, res, next) => {
       });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    // Construire l'URL complète
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
 
     res.status(201).json({
       success: true,
+      url: fileUrl, // Retourner directement l'URL
       data: {
         filename: req.file.filename,
         originalName: req.file.originalname,
@@ -38,18 +42,25 @@ export const getFiles = async (req, res, next) => {
     const uploadsDir = './uploads';
     const files = await fs.readdir(uploadsDir);
 
-    const fileDetails = await Promise.all(
-      files.map(async (filename) => {
-        const filePath = path.join(uploadsDir, filename);
-        const stats = await fs.stat(filePath);
+    // Construire l'URL de base
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const baseUrl = `${protocol}://${host}`;
 
-        return {
-          filename,
-          url: `/uploads/${filename}`,
-          size: stats.size,
-          createdAt: stats.birthtime,
-        };
-      })
+    const fileDetails = await Promise.all(
+      files
+        .filter(filename => !filename.startsWith('.')) // Ignorer les fichiers cachés
+        .map(async (filename) => {
+          const filePath = path.join(uploadsDir, filename);
+          const stats = await fs.stat(filePath);
+
+          return {
+            filename,
+            url: `${baseUrl}/uploads/${filename}`,
+            size: stats.size,
+            createdAt: stats.birthtime,
+          };
+        })
     );
 
     res.json({
