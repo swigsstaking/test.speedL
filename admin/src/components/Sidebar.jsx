@@ -35,8 +35,8 @@ const Sidebar = () => {
               className="w-full flex items-center justify-between px-4 py-3 bg-dark-800 hover:bg-dark-700 rounded-lg transition-colors"
             >
               <div className="flex items-center space-x-3">
-                {currentSite?.logo && (
-                  <img src={currentSite.logo} alt="" className="w-6 h-6 rounded" />
+                {currentSite?.logo?.url && (
+                  <img src={currentSite.logo.url} alt={currentSite.logo.alt || currentSite.name} className="w-8 h-8 object-contain rounded" />
                 )}
                 <span className="text-sm font-medium text-gray-200 truncate">
                   {currentSite?.name || 'Sélectionner un site'}
@@ -58,8 +58,8 @@ const Sidebar = () => {
                       currentSite?._id === site._id ? 'bg-dark-700' : ''
                     }`}
                   >
-                    {site.logo && (
-                      <img src={site.logo} alt="" className="w-6 h-6 rounded" />
+                    {site.logo?.url && (
+                      <img src={site.logo.url} alt={site.logo.alt || site.name} className="w-8 h-8 object-contain rounded" />
                     )}
                     <span className="text-sm text-gray-200 truncate">{site.name}</span>
                   </button>

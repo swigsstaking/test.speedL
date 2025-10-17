@@ -9,14 +9,18 @@ const Settings = () => {
   const { currentSite, refreshSites } = useSite();
   const queryClient = useQueryClient();
   const fileInputRef = useRef(null);
+  const faviconInputRef = useRef(null);
   const [logoPreview, setLogoPreview] = useState(null);
+  const [faviconPreview, setFaviconPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     domain: '',
     description: '',
     logoUrl: '',
     logoAlt: '',
+    faviconUrl: '',
     email: '',
     phone: '',
     address: '',
@@ -40,6 +44,7 @@ const Settings = () => {
         description: currentSite.description || '',
         logoUrl: currentSite.logo?.url || '',
         logoAlt: currentSite.logo?.alt || currentSite.name || '',
+        faviconUrl: currentSite.favicon || '',
         email: currentSite.contact?.email || '',
         phone: currentSite.contact?.phone || '',
         address: currentSite.contact?.address || '',
@@ -54,6 +59,7 @@ const Settings = () => {
         tiktok: currentSite.social?.tiktok || '',
       });
       setLogoPreview(currentSite.logo?.url || null);
+      setFaviconPreview(currentSite.favicon || null);
     }
   }, [currentSite]);
 
@@ -114,6 +120,44 @@ const Settings = () => {
     }
   };
 
+  const handleFaviconUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Vérifier le type de fichier
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner une image');
+      return;
+    }
+
+    // Vérifier la taille (max 1MB pour favicon)
+    if (file.size > 1 * 1024 * 1024) {
+      toast.error('Le favicon ne doit pas dépasser 1MB');
+      return;
+    }
+
+    setUploadingFavicon(true);
+    try {
+      const response = await mediaAPI.upload(file);
+      const faviconUrl = response.url;
+      setFormData({ ...formData, faviconUrl });
+      setFaviconPreview(faviconUrl);
+      toast.success('Favicon uploadé avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de l\'upload du favicon');
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
+
+  const handleRemoveFavicon = () => {
+    setFormData({ ...formData, faviconUrl: '' });
+    setFaviconPreview(null);
+    if (faviconInputRef.current) {
+      faviconInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -125,6 +169,7 @@ const Settings = () => {
         url: formData.logoUrl,
         alt: formData.logoAlt || formData.name,
       },
+      favicon: formData.faviconUrl,
       contact: {
         email: formData.email,
         phone: formData.phone,
@@ -231,6 +276,64 @@ const Settings = () => {
                 placeholder="Logo de Speed-L Auto-école"
                 className="w-full px-4 py-2 bg-dark-900 border border-dark-700 rounded-lg text-gray-100 focus:outline-none focus:border-primary-600"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Favicon Section */}
+        <div className="bg-dark-800 border border-dark-700 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-gray-100 mb-4 flex items-center">
+            <ImageIcon className="w-5 h-5 mr-2 text-primary-600" />
+            Favicon du Site
+          </h2>
+          <div className="space-y-4">
+            {/* Favicon Preview */}
+            {faviconPreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={faviconPreview}
+                  alt="Favicon preview"
+                  className="w-16 h-16 object-contain bg-white p-2 rounded-lg border-2 border-dark-700"
+                  onError={(e) => {
+                    console.error('Erreur de chargement du favicon:', faviconPreview);
+                    e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="red">Erreur</text></svg>';
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveFavicon}
+                  className="absolute -top-2 -right-2 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center w-16 h-16 bg-dark-900 border-2 border-dashed border-dark-700 rounded-lg">
+                <ImageIcon className="w-8 h-8 text-gray-600" />
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <div>
+              <input
+                ref={faviconInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFaviconUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => faviconInputRef.current?.click()}
+                disabled={uploadingFavicon}
+                className="flex items-center space-x-2 px-4 py-2 bg-dark-700 hover:bg-dark-600 disabled:bg-dark-800 text-gray-300 rounded-lg transition-colors"
+              >
+                <Upload className="w-4 h-4" />
+                <span>{uploadingFavicon ? 'Upload en cours...' : 'Choisir un favicon'}</span>
+              </button>
+              <p className="text-sm text-gray-500 mt-2">
+                Formats acceptés : ICO, PNG (32x32 ou 16x16, max 1MB)
+              </p>
             </div>
           </div>
         </div>
@@ -397,7 +500,6 @@ const Settings = () => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                <Facebook className="w-4 h-4 inline mr-2" />
                 Facebook
               </label>
               <input
@@ -411,7 +513,6 @@ const Settings = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                <Twitter className="w-4 h-4 inline mr-2" />
                 Twitter
               </label>
               <input
@@ -425,7 +526,6 @@ const Settings = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                <Instagram className="w-4 h-4 inline mr-2" />
                 Instagram
               </label>
               <input
@@ -439,7 +539,6 @@ const Settings = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                <Linkedin className="w-4 h-4 inline mr-2" />
                 LinkedIn
               </label>
               <input

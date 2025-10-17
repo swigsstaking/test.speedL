@@ -31,6 +31,9 @@ const siteSchema = new mongoose.Schema({
       default: 'Logo',
     },
   },
+  favicon: {
+    type: String,
+  },
   theme: {
     primaryColor: {
       type: String,
