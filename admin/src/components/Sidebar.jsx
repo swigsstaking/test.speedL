@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Search, FileText, Image, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Search, BarChart3, Image, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSite } from '../context/SiteContext';
@@ -14,7 +14,7 @@ const Sidebar = () => {
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/courses', icon: BookOpen, label: 'Formations' },
     { to: '/seo', icon: Search, label: 'SEO' },
-    { to: '/content', icon: FileText, label: 'Contenu' },
+    { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/media', icon: Image, label: 'Médias' },
     { to: '/settings', icon: Settings, label: 'Paramètres' },
   ];

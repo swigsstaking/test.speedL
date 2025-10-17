@@ -8,7 +8,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
 import SEO from './pages/SEO';
-import Content from './pages/Content';
+import Analytics from './pages/Analytics';
 import Media from './pages/Media';
 import Settings from './pages/Settings';
 
@@ -55,7 +55,7 @@ function App() {
             <Route index element={<Dashboard />} />
             <Route path="courses" element={<Courses />} />
             <Route path="seo" element={<SEO />} />
-            <Route path="content" element={<Content />} />
+            <Route path="analytics" element={<Analytics />} />
             <Route path="media" element={<Media />} />
             <Route path="settings" element={<Settings />} />
           </Route>

@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Calendar, Clock, Users, AlertCircle, CheckCircle, Mail, Phone, User } from 'lucide-react'
+
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 const Courses = () => {
   const [formData, setFormData] = useState({
@@ -10,60 +12,35 @@ const Courses = () => {
     message: ''
   })
   const [submitted, setSubmitted] = useState(false)
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const courses = [
-    {
-      id: 'sensibilisation',
-      title: 'Cours de sensibilisation',
-      number: 'N°609',
-      icon: <AlertCircle className="w-8 h-8" />,
-      color: 'primary',
-      dates: [
-        { day: 'Mercredi', date: '22.10.2025', time: '18h25' },
-        { day: 'Jeudi', date: '23.10.2025', time: '18h25' }
-      ],
-      description: 'Cours obligatoire pour tous les nouveaux conducteurs. Formation complète sur les risques de la route.',
-      duration: '2 soirées',
-      price: 'CHF 280.-'
-    },
-    {
-      id: 'moto',
-      title: 'Cours Moto / Scooter',
-      number: 'N°402',
-      icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ),
-      color: 'gray',
-      dates: [
-        { day: 'Samedi', date: '1 novembre 2025', time: '8h00' },
-        { day: 'Dimanche', date: '2 novembre 2025', time: '8h00' },
-        { day: 'Samedi', date: '8 novembre 2025', time: '8h00' }
-      ],
-      description: 'Formation pratique pour la conduite de motos et scooters. Apprentissage des techniques de base.',
-      duration: '3 jours',
-      price: 'CHF 350.-'
-    },
-    {
-      id: 'secours',
-      title: 'Cours de premiers secours',
-      number: 'N°141',
-      icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-      ),
-      color: 'red',
-      dates: [
-        { day: 'Vendredi', date: '21 novembre 2025', time: 'Journée complète' },
-        { day: 'Samedi', date: '22 novembre 2025', time: 'Journée complète' }
-      ],
-      description: 'Formation aux gestes de premiers secours. Obligatoire pour l\'obtention du permis de conduire.',
-      duration: '2 jours',
-      price: 'CHF 150.-'
+  // Récupérer les cours depuis l'API
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        // Récupérer l'ID du site Speed-L (slug: speed-l)
+        const sitesResponse = await fetch(`${API_URL}/sites`)
+        const sitesData = await sitesResponse.json()
+        const speedLSite = sitesData.data.find(site => site.slug === 'speed-l')
+        
+        if (speedLSite) {
+          // Récupérer les cours actifs pour Speed-L
+          const coursesResponse = await fetch(`${API_URL}/courses?siteId=${speedLSite._id}&status=active`)
+          const coursesData = await coursesResponse.json()
+          setCourses(coursesData.data || [])
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des cours:', error)
+        // Garder les cours par défaut en cas d'erreur
+        setCourses([])
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+
+    fetchCourses()
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -91,63 +68,105 @@ const Courses = () => {
       {/* Courses Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-8">
-            {courses.map((course) => (
-              <div key={course.id} className="card">
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Course Icon & Title */}
-                  <div className="flex-shrink-0">
-                    <div className={`w-16 h-16 bg-${course.color === 'primary' ? 'primary' : course.color === 'red' ? 'red' : 'gray'}-100 rounded-xl flex items-center justify-center text-${course.color === 'primary' ? 'primary' : course.color === 'red' ? 'red' : 'gray'}-600`}>
-                      {course.icon}
-                    </div>
-                  </div>
-
-                  {/* Course Details */}
-                  <div className="flex-1">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-1">{course.title}</h3>
-                        <p className="text-primary-600 font-semibold">{course.number}</p>
-                      </div>
-                      <div className="mt-4 md:mt-0 text-right">
-                        <div className="text-2xl font-bold text-primary-600">{course.price}</div>
-                        <div className="text-sm text-gray-600">{course.duration}</div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            </div>
+          ) : courses.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Aucun cours disponible pour le moment.</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {courses.map((course) => (
+                <div key={course._id} className="card">
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Course Icon & Title */}
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 bg-primary-100 rounded-xl flex items-center justify-center text-primary-600">
+                        <AlertCircle className="w-8 h-8" />
                       </div>
                     </div>
 
-                    <p className="text-gray-700 mb-4">{course.description}</p>
-
-                    {/* Dates */}
-                    <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-                        <Calendar className="w-5 h-5 mr-2 text-primary-600" />
-                        Prochaines dates
-                      </h4>
-                      <div className="space-y-2">
-                        {course.dates.map((date, index) => (
-                          <div key={index} className="flex items-center text-gray-700">
-                            <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                            <span className="font-medium mr-2">{date.day}</span>
-                            <span className="mr-2">{date.date}</span>
-                            <span className="text-gray-600">à {date.time}</span>
+                    {/* Course Details */}
+                    <div className="flex-1">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                        <div>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-1">{course.title}</h3>
+                          <p className="text-primary-600 font-semibold">{course.number}</p>
+                          {course.category && (
+                            <span className="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
+                              {course.category}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-4 md:mt-0 text-right">
+                          <div className="text-2xl font-bold text-primary-600">
+                            CHF {course.price}.-
                           </div>
-                        ))}
+                          {course.duration && (
+                            <div className="text-sm text-gray-600">{course.duration}</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* CTA Button */}
-                    <a
-                      href="#inscription"
-                      onClick={() => setFormData({ ...formData, courseType: course.title })}
-                      className="btn-primary inline-block"
-                    >
-                      Je m'inscris
-                    </a>
+                      <p className="text-gray-700 mb-4">{course.description}</p>
+
+                      {/* Dates */}
+                      {course.dates && course.dates.length > 0 && (
+                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                          <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                            <Calendar className="w-5 h-5 mr-2 text-primary-600" />
+                            Prochaines dates
+                          </h4>
+                          <div className="space-y-2">
+                            {course.dates.map((date, index) => (
+                              <div key={index} className="flex items-center text-gray-700">
+                                <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                                <span className="mr-2">{new Date(date).toLocaleDateString('fr-FR', { 
+                                  weekday: 'long', 
+                                  year: 'numeric', 
+                                  month: 'long', 
+                                  day: 'numeric' 
+                                })}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Location & Instructor */}
+                      {(course.location || course.instructor) && (
+                        <div className="flex flex-wrap gap-4 mb-4 text-sm text-gray-600">
+                          {course.location && (
+                            <div className="flex items-center">
+                              <Users className="w-4 h-4 mr-2" />
+                              {course.location}
+                            </div>
+                          )}
+                          {course.instructor && (
+                            <div className="flex items-center">
+                              <User className="w-4 h-4 mr-2" />
+                              {course.instructor}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* CTA Button */}
+                      <a
+                        href="#inscription"
+                        onClick={() => setFormData({ ...formData, courseType: course.title })}
+                        className="btn-primary inline-block"
+                      >
+                        Je m'inscris
+                      </a>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Theory Course Info */}
           <div className="mt-8 card bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200">
