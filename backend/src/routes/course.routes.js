@@ -11,17 +11,14 @@ import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.use(protect);
+// Routes publiques (GET)
+router.get('/', getCourses);
+router.get('/:id', getCourse);
 
-router.route('/')
-  .get(getCourses)
-  .post(createCourse);
-
-router.put('/reorder', reorderCourses);
-
-router.route('/:id')
-  .get(getCourse)
-  .put(updateCourse)
-  .delete(deleteCourse);
+// Routes protégées (POST, PUT, DELETE)
+router.post('/', protect, createCourse);
+router.put('/reorder', protect, reorderCourses);
+router.put('/:id', protect, updateCourse);
+router.delete('/:id', protect, deleteCourse);
 
 export default router;

@@ -9,14 +9,12 @@ import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.use(protect);
+// Routes publiques (GET)
+router.get('/', getSEO);
+router.get('/:id', getSEOById);
 
-router.route('/')
-  .get(getSEO)
-  .post(upsertSEO);
-
-router.route('/:id')
-  .get(getSEOById)
-  .delete(deleteSEO);
+// Routes protégées (POST, DELETE)
+router.post('/', protect, upsertSEO);
+router.delete('/:id', protect, deleteSEO);
 
 export default router;
