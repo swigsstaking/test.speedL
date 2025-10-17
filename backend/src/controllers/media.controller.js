@@ -13,10 +13,19 @@ export const uploadFile = async (req, res, next) => {
       });
     }
 
-    // Construire l'URL complète
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    // Utiliser PUBLIC_URL si défini, sinon construire depuis la requête
+    const publicUrl = process.env.PUBLIC_URL;
+    let fileUrl;
+    
+    if (publicUrl) {
+      // Utiliser l'URL publique configurée (pour production)
+      fileUrl = `${publicUrl}/uploads/${req.file.filename}`;
+    } else {
+      // Fallback : construire depuis la requête (pour développement)
+      const protocol = req.protocol;
+      const host = req.get('host');
+      fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    }
 
     res.status(201).json({
       success: true,
@@ -42,10 +51,17 @@ export const getFiles = async (req, res, next) => {
     const uploadsDir = './uploads';
     const files = await fs.readdir(uploadsDir);
 
-    // Construire l'URL de base
-    const protocol = req.protocol;
-    const host = req.get('host');
-    const baseUrl = `${protocol}://${host}`;
+    // Utiliser PUBLIC_URL si défini, sinon construire depuis la requête
+    const publicUrl = process.env.PUBLIC_URL;
+    let baseUrl;
+    
+    if (publicUrl) {
+      baseUrl = publicUrl;
+    } else {
+      const protocol = req.protocol;
+      const host = req.get('host');
+      baseUrl = `${protocol}://${host}`;
+    }
 
     const fileDetails = await Promise.all(
       files
