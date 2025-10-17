@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSite } from '../context/SiteContext';
-import { coursesAPI, seoAPI, contentAPI, mediaAPI } from '../services/api';
-import { TrendingUp, Users, BookOpen, Eye, FileText, Image as ImageIcon, Calendar } from 'lucide-react';
+import { coursesAPI, seoAPI, mediaAPI } from '../services/api';
+import { TrendingUp, Users, BookOpen, Eye, Image as ImageIcon, Calendar } from 'lucide-react';
 
 const Analytics = () => {
   const { currentSite } = useSite();
@@ -16,12 +16,6 @@ const Analytics = () => {
   const { data: seoData } = useQuery({
     queryKey: ['seo', currentSite?._id],
     queryFn: () => seoAPI.getAll({ siteId: currentSite?._id }),
-    enabled: !!currentSite,
-  });
-
-  const { data: contentData } = useQuery({
-    queryKey: ['content', currentSite?._id],
-    queryFn: () => contentAPI.getAll({ siteId: currentSite?._id }),
     enabled: !!currentSite,
   });
 
@@ -43,8 +37,6 @@ const Analytics = () => {
     totalCourses: coursesData?.data?.length || 0,
     activeCourses: coursesData?.data?.filter(c => c.status === 'active').length || 0,
     totalSEO: seoData?.data?.length || 0,
-    totalContent: contentData?.data?.length || 0,
-    activeContent: contentData?.data?.filter(c => c.isActive).length || 0,
     totalMedia: mediaData?.data?.length || 0,
   };
 
@@ -109,7 +101,7 @@ const Analytics = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <StatCard
           title="Formations"
           value={stats.totalCourses}
@@ -123,13 +115,6 @@ const Analytics = () => {
           icon={Eye}
           color="blue"
           subtitle="Optimisées"
-        />
-        <StatCard
-          title="Blocs de contenu"
-          value={stats.totalContent}
-          icon={FileText}
-          color="green"
-          subtitle={`${stats.activeContent} actifs`}
         />
         <StatCard
           title="Fichiers média"
