@@ -48,7 +48,7 @@ export const uploadFile = async (req, res, next) => {
 // @access  Private
 export const getFiles = async (req, res, next) => {
   try {
-    const uploadsDir = './uploads';
+    const uploadsDir = process.env.UPLOAD_PATH || '/var/www/speed-l/uploads';
     const files = await fs.readdir(uploadsDir);
 
     // Utiliser PUBLIC_URL si défini, sinon construire depuis la requête
@@ -95,7 +95,8 @@ export const getFiles = async (req, res, next) => {
 export const deleteFile = async (req, res, next) => {
   try {
     const { filename } = req.params;
-    const filePath = path.join('./uploads', filename);
+    const uploadsDir = process.env.UPLOAD_PATH || '/var/www/speed-l/uploads';
+    const filePath = path.join(uploadsDir, filename);
 
     await fs.unlink(filePath);
 

@@ -13,7 +13,9 @@ const router = express.Router();
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, './uploads/');
+    // Utiliser UPLOAD_PATH depuis .env ou /var/www/speed-l/uploads par défaut
+    const uploadPath = process.env.UPLOAD_PATH || '/var/www/speed-l/uploads';
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
