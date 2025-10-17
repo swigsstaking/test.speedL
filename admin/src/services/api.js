@@ -28,9 +28,16 @@ api.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Ne rediriger que si on n'est pas déjà sur la page de login
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        // Utiliser un petit délai pour éviter les boucles
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
+      }
     }
     return Promise.reject(error.response?.data || error.message);
   }

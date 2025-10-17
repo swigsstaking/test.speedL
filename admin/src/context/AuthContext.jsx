@@ -15,16 +15,16 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [checking, setChecking] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!checking) {
+    // Ne s'exécute qu'une seule fois au montage
+    if (!initialized) {
       checkAuth();
     }
-  }, []);
+  }, [initialized]);
 
   const checkAuth = async () => {
-    setChecking(true);
     const token = localStorage.getItem('token');
     if (token) {
       try {
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
       }
     }
     setLoading(false);
-    setChecking(false);
+    setInitialized(true);
   };
 
   const login = async (credentials) => {
