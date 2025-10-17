@@ -102,7 +102,7 @@ const Courses = () => {
                         </div>
                         <div className="mt-4 md:mt-0 text-right">
                           <div className="text-2xl font-bold text-primary-600">
-                            CHF {course.price}.-
+                            {course.price?.display || `CHF ${course.price?.amount || 0}.-`}
                           </div>
                           {course.duration && (
                             <div className="text-sm text-gray-600">{course.duration}</div>
@@ -120,15 +120,16 @@ const Courses = () => {
                             Prochaines dates
                           </h4>
                           <div className="space-y-2">
-                            {course.dates.map((date, index) => (
+                            {course.dates.map((dateObj, index) => (
                               <div key={index} className="flex items-center text-gray-700">
                                 <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                                <span className="mr-2">{new Date(date).toLocaleDateString('fr-FR', { 
-                                  weekday: 'long', 
-                                  year: 'numeric', 
-                                  month: 'long', 
-                                  day: 'numeric' 
-                                })}</span>
+                                <span className="mr-2">
+                                  {dateObj.day} - {new Date(dateObj.date).toLocaleDateString('fr-FR', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                  })} à {dateObj.time}
+                                </span>
                               </div>
                             ))}
                           </div>
