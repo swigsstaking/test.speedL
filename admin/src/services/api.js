@@ -102,4 +102,10 @@ export const mediaAPI = {
   delete: (filename) => api.delete(`/media/${filename}`),
 };
 
+// Webhook API
+export const webhookAPI = {
+  rebuildSite: () => api.post('/webhook/rebuild'),
+  getRebuildStatus: () => api.get('/webhook/rebuild/status'),
+};
+
 export default api;

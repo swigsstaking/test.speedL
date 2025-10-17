@@ -1,15 +1,21 @@
 import { useAuth } from '../context/AuthContext';
+import { useSite } from '../context/SiteContext';
+import RebuildButton from '../components/RebuildButton';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { currentSite } = useSite();
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-100 mb-2">Dashboard</h1>
-        <p className="text-gray-400">
-          Bienvenue {user?.name || 'Admin'} !
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-100 mb-2">Dashboard</h1>
+          <p className="text-gray-400">
+            Bienvenue {user?.name || 'Admin'} !
+          </p>
+        </div>
+        {currentSite && <RebuildButton />}
       </div>
 
       <div className="card p-6">
