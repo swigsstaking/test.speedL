@@ -1,7 +1,10 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Server, Globe, BarChart3, Activity } from 'lucide-react';
+import { LayoutDashboard, Server, Globe, BarChart3, Activity, Moon, Sun } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const Layout = () => {
+  const { isDark, toggleTheme } = useTheme();
+  
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard', end: true },
     { to: '/servers', icon: Server, label: 'Serveurs' },
@@ -26,10 +29,25 @@ const Layout = () => {
               </div>
             </div>
 
-            {/* Status Indicator */}
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-slate-600">Tous les systèmes opérationnels</span>
+            {/* Status Indicator & Theme Toggle */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-slate-600">Tous les systèmes opérationnels</span>
+              </div>
+              
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                aria-label="Toggle theme"
+              >
+                {isDark ? (
+                  <Sun className="w-5 h-5 text-slate-600" />
+                ) : (
+                  <Moon className="w-5 h-5 text-slate-600" />
+                )}
+              </button>
             </div>
           </div>
         </div>
