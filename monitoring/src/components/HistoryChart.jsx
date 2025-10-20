@@ -27,7 +27,7 @@ const HistoryChart = ({ serverId, metric = 'cpu', title }) => {
       minute: '2-digit',
       ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
     }),
-    value: metric === 'cpu' ? m.cpu?.usage : m.ram?.percent
+    value: metric === 'cpu' ? m.metrics?.cpu?.usage || 0 : m.metrics?.ram?.percent || 0
   })) || [];
 
   const color = metric === 'cpu' ? '#0ea5e9' : '#10b981';
@@ -44,7 +44,7 @@ const HistoryChart = ({ serverId, metric = 'cpu', title }) => {
               className={`px-3 py-1 text-sm rounded-lg transition-colors ${
                 period === p.value
                   ? 'bg-primary-500 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
               }`}
             >
               {p.label}
@@ -54,7 +54,7 @@ const HistoryChart = ({ serverId, metric = 'cpu', title }) => {
       </div>
       
       {chartData.length === 0 ? (
-        <div className="h-64 flex items-center justify-center text-slate-500">
+        <div className="h-64 flex items-center justify-center text-slate-500 dark:text-slate-400">
           Chargement des données...
         </div>
       ) : (
