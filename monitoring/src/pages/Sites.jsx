@@ -191,7 +191,10 @@ const Sites = () => {
                   </div>
                 )}
               </div>
-              <button className="btn-secondary text-sm">
+              <button 
+                onClick={() => window.location.href = `/sites/${site.id}`}
+                className="btn-secondary text-sm"
+              >
                 Voir détails
               </button>
             </div>

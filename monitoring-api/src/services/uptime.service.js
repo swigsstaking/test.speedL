@@ -52,24 +52,29 @@ export async function checkSSL(url) {
       const options = {
         hostname,
         port: 443,
-        method: 'GET',
-        rejectUnauthorized: false,
+        method: 'HEAD',
+        rejectUnauthorized: true, // Vérifier vraiment le certificat
       };
       
       const req = https.request(options, (res) => {
         const cert = res.socket.getPeerCertificate();
         
-        if (cert && cert.valid_to) {
+        if (cert && Object.keys(cert).length > 0) {
           const expiryDate = new Date(cert.valid_to);
           const daysUntilExpiry = Math.floor((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+          
+          console.log(`🔒 SSL ${hostname}: valide, expire ${expiryDate.toLocaleDateString()}`);
           
           resolve({
             valid: true,
             expiresIn: daysUntilExpiry,
             expiryDate,
-            issuer: cert.issuer?.O || 'Unknown',
+            issuer: cert.issuer?.O || cert.issuer?.CN || 'Unknown',
+            validFrom: new Date(cert.valid_from),
+            subject: cert.subject?.CN || hostname,
           });
         } else {
+          console.log(`❌ SSL ${hostname}: certificat vide`);
           resolve({
             valid: false,
             expiresIn: 0,
@@ -77,16 +82,19 @@ export async function checkSSL(url) {
         }
       });
       
-      req.on('error', () => {
+      req.on('error', (error) => {
+        console.log(`❌ SSL ${hostname}: ${error.message}`);
         resolve({
           valid: false,
           expiresIn: 0,
+          error: error.message,
         });
       });
       
       req.end();
     });
   } catch (error) {
+    console.log(`❌ SSL error: ${error.message}`);
     return {
       valid: false,
       expiresIn: 0,
