@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Search, BarChart3, Image, Settings, LogOut, ChevronDown, Mail } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Search, BarChart3, Image, Settings, LogOut, ChevronDown, Mail, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSite } from '../context/SiteContext';
@@ -17,6 +17,7 @@ const Sidebar = () => {
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/media', icon: Image, label: 'Médias' },
     { to: '/contacts', icon: Mail, label: 'Contacts' },
+    { to: '/users', icon: Users, label: 'Utilisateurs', adminOnly: true },
     { to: '/settings', icon: Settings, label: 'Paramètres' },
   ];
 
@@ -73,22 +74,29 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-primary-600 text-white'
-                  : 'text-gray-400 hover:bg-dark-800 hover:text-gray-200'
-              }`
-            }
-          >
-            <item.icon className="w-5 h-5" />
-            <span className="font-medium">{item.label}</span>
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          // Masquer les items adminOnly si l'utilisateur n'est pas admin
+          if (item.adminOnly && user?.role !== 'admin') {
+            return null;
+          }
+          
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-primary-600 text-white'
+                    : 'text-gray-400 hover:bg-dark-800 hover:text-gray-200'
+                }`
+              }
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="font-medium">{item.label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* User Info & Logout */}

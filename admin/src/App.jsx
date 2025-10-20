@@ -14,6 +14,7 @@ const SEO = lazy(() => import('./pages/SEO'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Media = lazy(() => import('./pages/Media'));
 const Contacts = lazy(() => import('./pages/Contacts'));
+const Users = lazy(() => import('./pages/Users'));
 const Settings = lazy(() => import('./pages/Settings'));
 
 // Loading component
@@ -70,6 +71,7 @@ function App() {
               <Route path="analytics" element={<Analytics />} />
               <Route path="media" element={<Media />} />
               <Route path="contacts" element={<Contacts />} />
+              <Route path="users" element={<Users />} />
               <Route path="settings" element={<Settings />} />
             </Route>
 
