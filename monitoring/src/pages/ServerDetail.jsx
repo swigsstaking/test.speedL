@@ -48,23 +48,33 @@ const ServerDetail = () => {
     );
   }
 
-  // Utiliser uniquement les données réelles actuelles
-  // Pas d'historique disponible pour l'instant
-  const now = new Date();
-  const cpuData = [{
-    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-    value: cpu.usage || 0
-  }];
-  
-  const ramData = [{
-    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-    value: ram.percent || 0
-  }];
-  
-  const diskData = [{
-    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-    value: disk.percent || 0
-  }];
+  // Transformer les données d'historique pour les graphiques
+  const cpuData = historyData?.data?.metrics?.map(m => ({
+    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
+    }),
+    value: m.metrics?.cpu?.usage || 0
+  })) || [];
+
+  const ramData = historyData?.data?.metrics?.map(m => ({
+    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
+    }),
+    value: m.metrics?.ram?.percent || 0
+  })) || [];
+
+  const diskData = historyData?.data?.metrics?.map(m => ({
+    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
+    }),
+    value: m.metrics?.disk?.[0]?.percent || 0
+  })) || [];
 
   return (
     <div className="space-y-6">

@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import ServerMetric from './src/models/ServerMetric.js';
 
 dotenv.config();
 
@@ -95,12 +96,13 @@ app.post('/api/metrics', async (req, res) => {
   try {
     const { serverId, ...metricData } = req.body;
 
-    // Sauvegarder métrique
-    const metric = new Metric({
+    // Sauvegarder métrique dans ServerMetric
+    const serverMetric = new ServerMetric({
       serverId,
-      ...metricData
+      metrics: metricData
     });
-    await metric.save();
+    await serverMetric.save();
+    console.log(`💾 Métrique sauvegardée pour ${serverId}`);
 
     // Mettre à jour serveur
     await ServerModel.findOneAndUpdate(
@@ -108,7 +110,8 @@ app.post('/api/metrics', async (req, res) => {
       { 
         serverId,
         lastSeen: new Date(),
-        status: 'online'
+        status: 'online',
+        metrics: metricData
       },
       { upsert: true, new: true }
     );
@@ -180,10 +183,10 @@ app.get('/api/servers/:serverId', async (req, res) => {
         startDate = new Date(now - 24 * 60 * 60 * 1000);
     }
 
-    const metrics = await Metric.find({
+    const metrics = await ServerMetric.find({
       serverId,
       timestamp: { $gte: startDate }
-    }).sort({ timestamp: 1 });
+    }).sort({ timestamp: 1 }).limit(200); // Limiter à 200 points max
 
     res.json({ 
       success: true, 
