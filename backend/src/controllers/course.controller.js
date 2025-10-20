@@ -1,4 +1,5 @@
 import Course from '../models/Course.js';
+import { invalidateCache } from '../middleware/cache.middleware.js';
 
 // @desc    Get all courses for a site
 // @route   GET /api/courses?siteId=xxx
@@ -55,6 +56,9 @@ export const createCourse = async (req, res, next) => {
   try {
     const course = await Course.create(req.body);
 
+    await invalidateCache('courses:*');
+    await invalidateCache('course:*');
+
     res.status(201).json({
       success: true,
       data: course,
@@ -85,6 +89,9 @@ export const updateCourse = async (req, res, next) => {
       });
     }
 
+    await invalidateCache('courses:*');
+    await invalidateCache('course:*');
+
     res.json({
       success: true,
       data: course,
@@ -108,6 +115,9 @@ export const deleteCourse = async (req, res, next) => {
       });
     }
 
+    await invalidateCache('courses:*');
+    await invalidateCache('course:*');
+
     res.json({
       success: true,
       message: 'Course deleted successfully',
@@ -129,6 +139,9 @@ export const reorderCourses = async (req, res, next) => {
     );
 
     await Promise.all(updatePromises);
+
+    await invalidateCache('courses:*');
+    await invalidateCache('course:*');
 
     res.json({
       success: true,

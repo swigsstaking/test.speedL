@@ -1,4 +1,5 @@
 import Site from '../models/Site.js';
+import { invalidateCache } from '../middleware/cache.middleware.js';
 
 // @desc    Get all sites
 // @route   GET /api/sites
@@ -47,6 +48,10 @@ export const createSite = async (req, res, next) => {
   try {
     const site = await Site.create(req.body);
 
+    // Invalider le cache
+    await invalidateCache('sites:*');
+    await invalidateCache('site:*');
+
     res.status(201).json({
       success: true,
       data: site,
@@ -77,6 +82,10 @@ export const updateSite = async (req, res, next) => {
       });
     }
 
+    // Invalider le cache
+    await invalidateCache('sites:*');
+    await invalidateCache('site:*');
+
     res.json({
       success: true,
       data: site,
@@ -104,9 +113,13 @@ export const deleteSite = async (req, res, next) => {
     site.isActive = false;
     await site.save();
 
+    // Invalider le cache
+    await invalidateCache('sites:*');
+    await invalidateCache('site:*');
+
     res.json({
       success: true,
-      message: 'Site deleted successfully',
+      data: {},
     });
   } catch (error) {
     next(error);
