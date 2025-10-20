@@ -152,18 +152,43 @@ const Sites = () => {
 
             {/* Footer */}
             <div className="pt-6 border-t border-slate-200 dark:border-slate-600 flex items-center justify-between">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
+                {/* SSL Status */}
                 <div className={`flex items-center gap-2 text-sm ${
-                  site.ssl.valid ? 'text-emerald-600' : 'text-red-600'
+                  site.ssl?.valid ? 'text-emerald-600' : 'text-red-600'
                 }`}>
-                  {site.ssl.valid ? (
+                  {site.ssl?.valid ? (
                     <><CheckCircle className="w-4 h-4" /> SSL valide</>
                   ) : (
                     <><AlertCircle className="w-4 h-4" /> SSL invalide</>
                   )}
                 </div>
-                {site.ssl.valid && (
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{site.url}</p>
+                
+                {/* SSL Expiration */}
+                {site.ssl?.valid && site.ssl?.expiresIn !== undefined && (
+                  <div className={`text-sm ${
+                    site.ssl.expiresIn > 30 ? 'text-slate-600 dark:text-slate-400' : 
+                    site.ssl.expiresIn > 7 ? 'text-amber-600' : 'text-red-600'
+                  }`}>
+                    Expire dans {site.ssl.expiresIn} jours
+                  </div>
+                )}
+                
+                {/* SSL Issuer */}
+                {site.ssl?.issuer && (
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                    Émetteur: {site.ssl.issuer}
+                  </div>
+                )}
+                
+                {/* Status Code */}
+                {site.statusCode && (
+                  <div className={`text-sm ${
+                    site.statusCode >= 200 && site.statusCode < 300 ? 'text-emerald-600' :
+                    site.statusCode >= 300 && site.statusCode < 400 ? 'text-amber-600' : 'text-red-600'
+                  }`}>
+                    HTTP {site.statusCode}
+                  </div>
                 )}
               </div>
               <button className="btn-secondary text-sm">

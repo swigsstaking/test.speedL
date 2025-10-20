@@ -303,6 +303,14 @@ const Dashboard = () => {
                           <TrendingUp className="w-3 h-3" />
                           {site.uptime}% uptime
                         </span>
+                        {site.ssl?.valid && (
+                          <span className={`flex items-center gap-1 ${
+                            site.ssl.expiresIn > 30 ? 'text-emerald-600' : 
+                            site.ssl.expiresIn > 7 ? 'text-amber-600' : 'text-red-600'
+                          }`}>
+                            🔒 SSL {site.ssl.expiresIn}j
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -260,6 +260,7 @@ app.get('/api/sites', async (req, res) => {
           ]);
           
           console.log(`✅ ${site.slug}: ${uptimeCheck.status} (${uptimeCheck.latency}ms)`);
+          console.log(`   SSL: ${sslCheck.valid ? 'Valide' : 'Invalide'}, expire dans ${sslCheck.expiresIn} jours`);
           
           return {
             id: site.slug,
@@ -269,6 +270,7 @@ app.get('/api/sites', async (req, res) => {
             latency: uptimeCheck.latency,
             uptime: 99.9, // TODO: Calculer depuis historique
             ssl: sslCheck,
+            statusCode: uptimeCheck.statusCode,
           };
         } catch (error) {
           console.error(`❌ Erreur vérification ${site.slug}:`, error.message);
