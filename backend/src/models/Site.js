@@ -18,6 +18,23 @@ const siteSchema = new mongoose.Schema({
     required: [true, 'Domain is required'],
     trim: true,
   },
+  // Domaines multiples (test, staging, production)
+  domains: [{
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    environment: {
+      type: String,
+      enum: ['test', 'staging', 'production'],
+      default: 'test',
+    },
+    isPrimary: {
+      type: Boolean,
+      default: false,
+    },
+  }],
   description: {
     type: String,
     trim: true,
