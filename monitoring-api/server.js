@@ -198,44 +198,75 @@ app.get('/api/servers/:serverId', async (req, res) => {
   }
 });
 
-// Sites - Version simplifiée (sans vérification uptime pour l'instant)
+// Sites - Version complète avec vérification uptime/SSL
 app.get('/api/sites', async (req, res) => {
   try {
-    console.log('📊 Récupération sites...');
+    console.log('📊 Récupération sites avec vérification...');
     
-    // Sites statiques pour l'instant
-    const sites = [
-      {
-        id: '1',
-        name: 'speedl.swigs.online',
-        url: 'https://speedl.swigs.online',
-        status: 'online',
-        latency: 45,
-        uptime: 99.9,
-        ssl: { valid: true, expiresIn: 89 }
-      },
-      {
-        id: '2',
-        name: 'admin.swigs.online',
-        url: 'https://admin.swigs.online',
-        status: 'online',
-        latency: 32,
-        uptime: 100,
-        ssl: { valid: true, expiresIn: 89 }
-      },
-      {
-        id: '3',
-        name: 'monitoring.swigs.online',
-        url: 'https://monitoring.swigs.online',
-        status: 'online',
-        latency: 28,
-        uptime: 100,
-        ssl: { valid: true, expiresIn: 89 }
-      }
+    const axios = (await import('axios')).default;
+    
+    // Liste des sites à vérifier
+    let sitesToCheck = [
+      { slug: 'speedl', name: 'Speed-L' },
+      { slug: 'admin', name: 'Admin' },
+      { slug: 'monitoring', name: 'Monitoring' }
     ];
     
-    console.log(`✅ ${sites.length} sites retournés`);
-    res.json({ success: true, data: sites });
+    // Essayer de récupérer depuis le backend principal
+    try {
+      const backendResponse = await axios.get('http://localhost:3000/api/sites', { timeout: 3000 });
+      if (backendResponse.data?.data?.length > 0) {
+        sitesToCheck = backendResponse.data.data.map(s => ({
+          slug: s.slug,
+          name: s.name || s.slug
+        }));
+        console.log(`✅ ${sitesToCheck.length} sites récupérés depuis backend`);
+      }
+    } catch (backendError) {
+      console.log('⚠️ Backend principal non accessible, utilisation sites par défaut');
+    }
+    
+    // Vérifier l'uptime et SSL de chaque site
+    const { checkSiteUptime, checkSSL } = await import('./src/services/uptime.service.js');
+    
+    const sitesWithStatus = await Promise.all(
+      sitesToCheck.map(async (site) => {
+        const url = `https://${site.slug}.swigs.online`;
+        
+        try {
+          const [uptimeCheck, sslCheck] = await Promise.all([
+            checkSiteUptime(url).catch(e => ({ status: 'error', latency: 0, error: e.message })),
+            checkSSL(url).catch(e => ({ valid: false, expiresIn: 0, error: e.message }))
+          ]);
+          
+          console.log(`✅ ${site.slug}: ${uptimeCheck.status} (${uptimeCheck.latency}ms)`);
+          
+          return {
+            id: site.slug,
+            name: `${site.slug}.swigs.online`,
+            url,
+            status: uptimeCheck.status,
+            latency: uptimeCheck.latency,
+            uptime: 99.9, // TODO: Calculer depuis historique
+            ssl: sslCheck,
+          };
+        } catch (error) {
+          console.error(`❌ Erreur vérification ${site.slug}:`, error.message);
+          return {
+            id: site.slug,
+            name: `${site.slug}.swigs.online`,
+            url,
+            status: 'error',
+            latency: 0,
+            uptime: 0,
+            ssl: { valid: false, expiresIn: 0 },
+          };
+        }
+      })
+    );
+    
+    console.log(`✅ ${sitesWithStatus.length} sites vérifiés et retournés`);
+    res.json({ success: true, data: sitesWithStatus });
   } catch (error) {
     console.error('❌ Erreur récupération sites:', error);
     res.json({ success: true, data: [] });
