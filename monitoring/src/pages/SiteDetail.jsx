@@ -138,9 +138,9 @@ const SiteDetail = () => {
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Requêtes</span>
           </div>
           <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            125k
+            0
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Dernières 24h</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">TODO: Logs Nginx</p>
         </motion.div>
 
         <motion.div
@@ -150,11 +150,11 @@ const SiteDetail = () => {
           className="metric-card"
         >
           <div className="flex items-center gap-2 mb-3">
-            <AlertCircle className="w-5 h-5 text-red-600" />
+            <AlertCircle className="w-5 h-5 text-slate-400" />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Erreurs</span>
           </div>
-          <div className="text-3xl font-bold text-red-600">
-            {site.status === 'online' ? 12 : 1250}
+          <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+            0
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Dernières 24h</p>
         </motion.div>

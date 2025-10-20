@@ -15,8 +15,8 @@ const Sites = () => {
 
   const sites = (sitesData?.data || []).map(site => ({
     ...site,
-    requests: 125000, // TODO: À récupérer depuis analytics
-    errors: site.status === 'online' ? 12 : 1250,
+    requests: 0, // TODO: Parser logs Nginx ou Analytics
+    errors: 0, // TODO: Parser logs erreurs
     sparkline: Array.from({ length: 10 }, () => site.latency + Math.random() * 10 - 5),
   }));
 

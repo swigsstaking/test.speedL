@@ -268,7 +268,7 @@ app.get('/api/sites', async (req, res) => {
             url,
             status: uptimeCheck.status,
             latency: uptimeCheck.latency,
-            uptime: 99.9, // TODO: Calculer depuis historique
+            uptime: 0, // TODO: Calculer depuis historique MongoDB
             ssl: sslCheck,
             statusCode: uptimeCheck.statusCode,
           };

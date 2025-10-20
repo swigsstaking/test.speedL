@@ -1,9 +1,11 @@
 import { Server, Cpu, HardDrive, Activity, Wifi, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { monitoringApi } from '../services/api';
 
 const Servers = () => {
+  const navigate = useNavigate();
   const { data: serversData } = useQuery({
     queryKey: ['servers'],
     queryFn: monitoringApi.getServers,
@@ -151,12 +153,15 @@ const Servers = () => {
             </div>
 
             {/* Footer */}
-            <div className="mt-6 pt-6 border-t border-slate-200 flex items-center justify-between">
+            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-600 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <Clock className="w-4 h-4" />
                 <span>Uptime: <span className="font-medium text-slate-900 dark:text-slate-100">En ligne</span></span>
               </div>
-              <button className="btn-secondary text-sm">
+              <button 
+                onClick={() => navigate(`/servers/${server.serverId}`)}
+                className="btn-secondary text-sm"
+              >
                 Voir détails
               </button>
             </div>
