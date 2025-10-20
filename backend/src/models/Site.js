@@ -56,6 +56,12 @@ const siteSchema = new mongoose.Schema({
     postalCode: String,
     country: String,
     whatsapp: String,
+    // Email pour recevoir les formulaires
+    formsEmail: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
   },
   social: {
     facebook: String,

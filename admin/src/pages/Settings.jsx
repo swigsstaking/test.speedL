@@ -22,6 +22,7 @@ const Settings = () => {
     logoAlt: '',
     faviconUrl: '',
     email: '',
+    formsEmail: '',
     phone: '',
     address: '',
     city: '',
@@ -46,6 +47,7 @@ const Settings = () => {
         logoAlt: currentSite.logo?.alt || currentSite.name || '',
         faviconUrl: currentSite.favicon || '',
         email: currentSite.contact?.email || '',
+        formsEmail: currentSite.contact?.formsEmail || '',
         phone: currentSite.contact?.phone || '',
         address: currentSite.contact?.address || '',
         city: currentSite.contact?.city || '',
@@ -172,6 +174,7 @@ const Settings = () => {
       favicon: formData.faviconUrl,
       contact: {
         email: formData.email,
+        formsEmail: formData.formsEmail,
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
@@ -403,6 +406,23 @@ const Settings = () => {
                 onChange={handleChange}
                 className="w-full px-4 py-2 bg-dark-900 border border-dark-700 rounded-lg text-gray-100 focus:outline-none focus:border-primary-600"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                <Mail className="w-4 h-4 inline mr-2" />
+                Email pour les formulaires
+              </label>
+              <input
+                type="email"
+                name="formsEmail"
+                value={formData.formsEmail}
+                onChange={handleChange}
+                placeholder="contact@example.com"
+                className="w-full px-4 py-2 bg-dark-900 border border-dark-700 rounded-lg text-gray-100 focus:outline-none focus:border-primary-600"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Les formulaires de contact et bons cadeaux seront envoyés à cette adresse
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">

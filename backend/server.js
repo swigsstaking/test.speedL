@@ -15,6 +15,7 @@ import courseRoutes from './src/routes/course.routes.js';
 import contentRoutes from './src/routes/content.routes.js';
 import mediaRoutes from './src/routes/media.routes.js';
 import webhookRoutes from './src/routes/webhook.routes.js';
+import contactRoutes from './src/routes/contact.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -61,6 +62,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/webhook', webhookRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

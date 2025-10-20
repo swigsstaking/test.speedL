@@ -1,5 +1,7 @@
-import { useState } from 'react'
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle, User, MessageSquare, Facebook, Instagram } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle, User, MessageSquare, Facebook, Instagram, AlertCircle } from 'lucide-react'
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://swigs.online/api'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -10,6 +12,26 @@ const Contact = () => {
     message: ''
   })
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [siteId, setSiteId] = useState(null)
+
+  // Récupérer l'ID du site Speed-L
+  useEffect(() => {
+    const fetchSiteId = async () => {
+      try {
+        const response = await fetch(`${API_URL}/sites`)
+        const data = await response.json()
+        const speedLSite = data.data.find(site => site.slug === 'speed-l')
+        if (speedLSite) {
+          setSiteId(speedLSite._id)
+        }
+      } catch (err) {
+        // Silently handle error
+      }
+    }
+    fetchSiteId()
+  }, [])
 
   const contactInfo = [
     {
@@ -38,11 +60,46 @@ const Contact = () => {
     }
   ]
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 5000)
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+    setLoading(true)
+    setError(null)
+
+    if (!siteId) {
+      setError('Erreur de configuration. Veuillez réessayer.')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/contact/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          siteId,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: `Sujet: ${formData.subject}\n\n${formData.message}`,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSubmitted(true)
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' })
+        setTimeout(() => setSubmitted(false), 5000)
+      } else {
+        setError(data.message || 'Erreur lors de l\'envoi du message')
+      }
+    } catch (err) {
+      setError('Erreur de connexion. Veuillez réessayer.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -109,6 +166,13 @@ const Contact = () => {
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center text-green-800">
                   <CheckCircle className="w-5 h-5 mr-3 flex-shrink-0" />
                   <p>Merci ! Votre message a été envoyé. Nous vous répondrons dans les plus brefs délais.</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-800">
+                  <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+                  <p>{error}</p>
                 </div>
               )}
 
@@ -209,9 +273,22 @@ const Contact = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="btn-primary w-full text-lg flex items-center justify-center">
-                  <Send className="w-5 h-5 mr-2" />
-                  Envoyer le message
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="btn-primary w-full text-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5 mr-2" />
+                      Envoyer le message
+                    </>
+                  )}
                 </button>
               </form>
             </div>
