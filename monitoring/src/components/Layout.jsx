@@ -15,7 +15,7 @@ const Layout = () => {
   return (
     <div className={`min-h-screen ${isDark ? 'dark bg-slate-900' : 'bg-slate-50'}`}>
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-50 backdrop-blur-sm bg-white/95 dark:bg-slate-800/95 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -24,8 +24,8 @@ const Layout = () => {
                 <Activity className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900">SWIGS Control Center</h1>
-                <p className="text-xs text-slate-500">Monitoring & Analytics</p>
+                <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">SWIGS Control Center</h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Monitoring & Analytics</p>
               </div>
             </div>
 
@@ -33,19 +33,19 @@ const Layout = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-slate-600">Tous les systèmes opérationnels</span>
+                <span className="text-sm text-slate-600 dark:text-slate-300">Tous les systèmes opérationnels</span>
               </div>
               
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                 aria-label="Toggle theme"
               >
                 {isDark ? (
-                  <Sun className="w-5 h-5 text-slate-600" />
+                  <Sun className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                 ) : (
-                  <Moon className="w-5 h-5 text-slate-600" />
+                  <Moon className="w-5 h-5 text-slate-600 dark:text-slate-300" />
                 )}
               </button>
             </div>
@@ -54,7 +54,7 @@ const Layout = () => {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-white border-b border-slate-200">
+      <nav className="bg-white border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-1">
             {navItems.map((item) => (
@@ -65,8 +65,8 @@ const Layout = () => {
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 ${
                     isActive
-                      ? 'text-primary-600 border-primary-500'
-                      : 'text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-50'
+                      ? 'text-primary-600 border-primary-500 dark:text-primary-400'
+                      : 'text-slate-600 border-transparent hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-700'
                   }`
                 }
               >
@@ -84,9 +84,9 @@ const Layout = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-12">
+      <footer className="bg-white border-t border-slate-200 mt-12 dark:bg-slate-800 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between text-sm text-slate-500">
+          <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
             <p>© 2025 SWIGS. Tous droits réservés.</p>
             <p>Version 1.0.0</p>
           </div>
