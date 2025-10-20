@@ -218,11 +218,18 @@ app.get('/api/sites', async (req, res) => {
       console.log('📡 Backend response:', JSON.stringify(backendResponse.data, null, 2));
       
       if (backendResponse.data?.data?.length > 0) {
-        sitesToCheck = backendResponse.data.data.map(s => ({
-          slug: s.slug,
-          name: s.name || s.slug,
-          domain: s.domain // Récupérer le domaine si disponible
-        }));
+        sitesToCheck = backendResponse.data.data.map(s => {
+          // Construire le domaine complet : slug.domain
+          const fullDomain = s.domains && s.domains.length > 0 
+            ? s.domains[0] // Utiliser le premier domaine custom si disponible
+            : `${s.slug}.${s.domain}`; // Sinon construire slug.domain
+          
+          return {
+            slug: s.slug,
+            name: s.name || s.slug,
+            domain: fullDomain
+          };
+        });
         console.log(`✅ ${sitesToCheck.length} sites récupérés depuis backend:`, sitesToCheck);
       }
     } catch (backendError) {
