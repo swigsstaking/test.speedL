@@ -115,4 +115,15 @@ export const contactAPI = {
   delete: (id) => api.delete(`/contact/${id}`),
 };
 
+// Users API
+export const usersAPI = {
+  getAll: () => api.get('/users'),
+  getById: (id) => api.get(`/users/${id}`),
+  create: (data) => api.post('/users', data),
+  update: (id, data) => api.put(`/users/${id}`, data),
+  changePassword: (id, data) => api.put(`/users/${id}/password`, data),
+  updateSites: (id, sites) => api.put(`/users/${id}/sites`, { sites }),
+  delete: (id) => api.delete(`/users/${id}`),
+};
+
 export default api;
