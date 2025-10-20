@@ -6,6 +6,7 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import logger from './src/utils/logger.js';
 import rateLimit from 'express-rate-limit';
+import './src/config/redis.js'; // Initialize Redis
 
 // Import routes
 import authRoutes from './src/routes/auth.routes.js';
