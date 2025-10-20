@@ -35,7 +35,10 @@ const DynamicLineChart = ({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data}>
+      <LineChart 
+        data={data}
+        margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
         <YAxis stroke="#64748b" fontSize={12} domain={yDomain} />
@@ -65,14 +68,14 @@ const DynamicLineChart = ({
           label={{ value: `${dangerThreshold}${unit}`, position: 'right', fill: dangerColor, fontSize: 10 }}
         />
         
-        {/* Ligne principale */}
+        {/* Ligne principale - animation désactivée pour éviter le zoom */}
         <Line
           type="monotone"
           dataKey={dataKey}
           stroke={normalColor}
           strokeWidth={2}
           dot={false}
-          isAnimationActive={true}
+          isAnimationActive={false}
           connectNulls={true}
         />
       </LineChart>
