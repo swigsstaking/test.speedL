@@ -12,9 +12,8 @@ const Sidebar = () => {
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/courses', icon: BookOpen, label: 'Formations' },
+    { to: '/courses', icon: BookOpen, label: 'Contenus' },
     { to: '/seo', icon: Search, label: 'SEO' },
-    { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/media', icon: Image, label: 'Médias' },
     { to: '/contacts', icon: Mail, label: 'Contacts' },
     { to: '/users', icon: Users, label: 'Utilisateurs', adminOnly: true },

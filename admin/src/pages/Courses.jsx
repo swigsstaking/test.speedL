@@ -74,9 +74,9 @@ const Courses = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-100 mb-2">Gestion des cours</h1>
+          <h1 className="text-3xl font-bold text-gray-100 mb-2">Gestion des contenus</h1>
           <p className="text-gray-400">
-            Gérez les cours pour {currentSite.name}
+            Gérez le contenu dynamique pour {currentSite.name}
           </p>
         </div>
         <button

@@ -11,7 +11,6 @@ const Login = lazy(() => import('./pages/Login'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Courses = lazy(() => import('./pages/Courses'));
 const SEO = lazy(() => import('./pages/SEO'));
-const Analytics = lazy(() => import('./pages/Analytics'));
 const Media = lazy(() => import('./pages/Media'));
 const Contacts = lazy(() => import('./pages/Contacts'));
 const Users = lazy(() => import('./pages/Users'));
@@ -68,7 +67,6 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="courses" element={<Courses />} />
               <Route path="seo" element={<SEO />} />
-              <Route path="analytics" element={<Analytics />} />
               <Route path="media" element={<Media />} />
               <Route path="contacts" element={<Contacts />} />
               <Route path="users" element={<Users />} />
