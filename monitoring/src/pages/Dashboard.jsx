@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Server, Globe, Activity, TrendingUp, Cpu, HardDrive, Wifi, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { monitoringApi } from '../services/api';
 import { useWebSocket } from '../hooks/useWebSocket';
 import HistoryChart from '../components/HistoryChart';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
   const { isConnected, latestMetric } = useWebSocket();
 
@@ -200,7 +202,11 @@ const Dashboard = () => {
                 const disk = metrics?.disk?.[0]?.percent || 0;
                 
                 return (
-                  <div key={server._id} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
+                  <div 
+                    key={server._id} 
+                    onClick={() => navigate(`/servers/${server.serverId}`)}
+                    className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-600 transition-all cursor-pointer"
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${
@@ -286,7 +292,11 @@ const Dashboard = () => {
           </div>
           <div className="space-y-3">
             {sites.map((site) => (
-              <div key={site.id} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 hover:shadow-md transition-shadow">
+              <div 
+                key={site.id} 
+                onClick={() => navigate(`/sites/${site.id}`)}
+                className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 hover:shadow-md hover:border-primary-300 dark:hover:border-primary-600 transition-all cursor-pointer"
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1">
                     <div className={`w-2 h-2 rounded-full ${

@@ -5,6 +5,7 @@ import { ArrowLeft, Globe, Wifi, TrendingUp, Clock, AlertCircle, CheckCircle, Sh
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import { monitoringApi } from '../services/api';
+import DynamicLineChart from '../components/DynamicLineChart';
 
 const SiteDetail = () => {
   const { siteId } = useParams();
@@ -187,34 +188,15 @@ const SiteDetail = () => {
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={historyData}>
-              <defs>
-                <linearGradient id="colorLatency" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
-              <YAxis stroke="#64748b" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#ffffff', 
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                }}
-                formatter={(value) => `${value.toFixed(0)}ms`}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="latency" 
-                stroke="#0ea5e9" 
-                strokeWidth={2}
-                fill="url(#colorLatency)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <DynamicLineChart
+            data={historyData}
+            dataKey="latency"
+            warningThreshold={100}
+            dangerThreshold={200}
+            yDomain={[0, 'auto']}
+            unit="ms"
+            height={300}
+          />
         </motion.div>
 
         {/* Uptime Chart */}
