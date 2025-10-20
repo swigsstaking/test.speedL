@@ -2,9 +2,11 @@ import { Globe, TrendingUp, Wifi, Clock, AlertCircle, CheckCircle } from 'lucide
 import { motion } from 'framer-motion';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { monitoringApi } from '../services/api';
 
 const Sites = () => {
+  const navigate = useNavigate();
   const { data: sitesData } = useQuery({
     queryKey: ['sites'],
     queryFn: monitoringApi.getSites,
@@ -192,7 +194,7 @@ const Sites = () => {
                 )}
               </div>
               <button 
-                onClick={() => window.location.href = `/sites/${site.id}`}
+                onClick={() => navigate(`/sites/${site.id}`)}
                 className="btn-secondary text-sm"
               >
                 Voir détails

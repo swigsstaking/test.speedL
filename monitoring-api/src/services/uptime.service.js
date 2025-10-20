@@ -52,14 +52,18 @@ export async function checkSSL(url) {
       const options = {
         hostname,
         port: 443,
-        method: 'HEAD',
+        method: 'GET',
+        path: '/',
         rejectUnauthorized: true, // Vérifier vraiment le certificat
+        agent: false, // Important pour récupérer le certificat
       };
       
       const req = https.request(options, (res) => {
-        const cert = res.socket.getPeerCertificate();
+        const cert = res.socket.getPeerCertificate(true); // true pour obtenir le certificat complet
         
-        if (cert && Object.keys(cert).length > 0) {
+        console.log(`📋 Certificat reçu pour ${hostname}:`, cert ? 'OUI' : 'NON', Object.keys(cert || {}).length, 'clés');
+        
+        if (cert && Object.keys(cert).length > 0 && cert.valid_to) {
           const expiryDate = new Date(cert.valid_to);
           const daysUntilExpiry = Math.floor((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
           
