@@ -1,5 +1,7 @@
-import { useState } from 'react'
-import { Gift, Heart, Star, CheckCircle, Mail, Phone, User, CreditCard } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Gift, Heart, Star, CheckCircle, Mail, Phone, User, CreditCard, AlertCircle } from 'lucide-react'
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://swigs.online/api'
 
 const GiftCards = () => {
   const [formData, setFormData] = useState({
@@ -7,11 +9,33 @@ const GiftCards = () => {
     buyerEmail: '',
     buyerPhone: '',
     recipientName: '',
+    recipientEmail: '',
     amount: '',
     customAmount: '',
+    deliveryDate: '',
     message: ''
   })
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [siteId, setSiteId] = useState(null)
+
+  // Récupérer l'ID du site Speed-L
+  useEffect(() => {
+    const fetchSiteId = async () => {
+      try {
+        const response = await fetch(`${API_URL}/sites`)
+        const data = await response.json()
+        const speedLSite = data.data.find(site => site.slug === 'speed-l')
+        if (speedLSite) {
+          setSiteId(speedLSite._id)
+        }
+      } catch (err) {
+        // Silently handle error
+      }
+    }
+    fetchSiteId()
+  }, [])
 
   const giftAmounts = [
     { value: '100', label: 'CHF 100.-', description: '1 leçon de conduite' },
@@ -39,19 +63,69 @@ const GiftCards = () => {
     }
   ]
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 5000)
-    setFormData({
-      buyerName: '',
-      buyerEmail: '',
-      buyerPhone: '',
-      recipientName: '',
-      amount: '',
-      customAmount: '',
-      message: ''
-    })
+    setLoading(true)
+    setError(null)
+
+    if (!siteId) {
+      setError('Erreur de configuration. Veuillez réessayer.')
+      setLoading(false)
+      return
+    }
+
+    // Calculer le montant final
+    const finalAmount = formData.amount === 'custom' ? formData.customAmount : formData.amount
+
+    if (!finalAmount || finalAmount <= 0) {
+      setError('Veuillez sélectionner un montant valide')
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/contact/gift-card`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          siteId,
+          name: formData.buyerName,
+          email: formData.buyerEmail,
+          phone: formData.buyerPhone,
+          amount: parseFloat(finalAmount),
+          recipientName: formData.recipientName,
+          recipientEmail: formData.recipientEmail || undefined,
+          deliveryDate: formData.deliveryDate || undefined,
+          message: formData.message || undefined,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setSubmitted(true)
+        setFormData({
+          buyerName: '',
+          buyerEmail: '',
+          buyerPhone: '',
+          recipientName: '',
+          recipientEmail: '',
+          amount: '',
+          customAmount: '',
+          deliveryDate: '',
+          message: ''
+        })
+        setTimeout(() => setSubmitted(false), 5000)
+      } else {
+        setError(data.message || 'Erreur lors de l\'envoi de la demande')
+      }
+    } catch (err) {
+      setError('Erreur de connexion. Veuillez réessayer.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleChange = (e) => {
@@ -157,6 +231,13 @@ const GiftCards = () => {
             </div>
           )}
 
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-800">
+              <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
+              <p>{error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="card">
             <div className="space-y-6">
               {/* Buyer Information */}
@@ -230,7 +311,7 @@ const GiftCards = () => {
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="recipientName" className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nom du bénéficiaire (optionnel)
+                      Nom du bénéficiaire *
                     </label>
                     <input
                       type="text"
@@ -238,10 +319,45 @@ const GiftCards = () => {
                       name="recipientName"
                       value={formData.recipientName}
                       onChange={handleChange}
+                      required
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       placeholder="Marie Dupont"
                     />
-                    <p className="text-sm text-gray-500 mt-1">Laissez vide pour un bon sans nom</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="recipientEmail" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email du bénéficiaire (optionnel)
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        type="email"
+                        id="recipientEmail"
+                        name="recipientEmail"
+                        value={formData.recipientEmail}
+                        onChange={handleChange}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        placeholder="marie.dupont@email.ch"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">Pour envoyer le bon par email</p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="deliveryDate" className="block text-sm font-semibold text-gray-700 mb-2">
+                      Date de livraison souhaitée (optionnel)
+                    </label>
+                    <input
+                      type="date"
+                      id="deliveryDate"
+                      name="deliveryDate"
+                      value={formData.deliveryDate}
+                      onChange={handleChange}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">Pour un anniversaire ou une occasion spéciale</p>
                   </div>
 
                   <div>
@@ -320,8 +436,22 @@ const GiftCards = () => {
                 </div>
               </div>
 
-              <button type="submit" className="btn-primary w-full text-lg">
-                Commander ce bon cadeau
+              <button 
+                type="submit" 
+                disabled={loading}
+                className="btn-primary w-full text-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Gift className="w-5 h-5 mr-2" />
+                    Commander ce bon cadeau
+                  </>
+                )}
               </button>
 
               <p className="text-sm text-gray-600 text-center">

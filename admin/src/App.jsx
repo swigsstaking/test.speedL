@@ -13,6 +13,7 @@ const Courses = lazy(() => import('./pages/Courses'));
 const SEO = lazy(() => import('./pages/SEO'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Media = lazy(() => import('./pages/Media'));
+const Contacts = lazy(() => import('./pages/Contacts'));
 const Settings = lazy(() => import('./pages/Settings'));
 
 // Loading component
@@ -68,6 +69,7 @@ function App() {
               <Route path="seo" element={<SEO />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="media" element={<Media />} />
+              <Route path="contacts" element={<Contacts />} />
               <Route path="settings" element={<Settings />} />
             </Route>
 
