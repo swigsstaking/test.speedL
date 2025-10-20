@@ -1,12 +1,10 @@
 const Logo = ({ className = "h-8" }) => {
   return (
     <div className={`flex items-center ${className}`}>
-      {/* Logo SWIGS original */}
-      <img 
-        src="/swigs-logo.png" 
-        alt="SWIGS" 
-        className="h-10 w-auto object-contain"
-      />
+      {/* SWIGS Text uniquement */}
+      <span className="text-2xl font-bold tracking-wider text-white">
+        SWIGS
+      </span>
     </div>
   );
 };
