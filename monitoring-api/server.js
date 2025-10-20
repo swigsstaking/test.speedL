@@ -219,10 +219,17 @@ app.get('/api/sites', async (req, res) => {
       
       if (backendResponse.data?.data?.length > 0) {
         sitesToCheck = backendResponse.data.data.map(s => {
-          // Construire le domaine complet : slug.domain
-          const fullDomain = s.domains && s.domains.length > 0 
-            ? s.domains[0] // Utiliser le premier domaine custom si disponible
-            : `${s.slug}.${s.domain}`; // Sinon construire slug.domain
+          // Construire le domaine complet
+          let fullDomain;
+          
+          if (s.domains && s.domains.length > 0) {
+            // Utiliser le premier domaine custom si disponible
+            fullDomain = s.domains[0];
+          } else {
+            // Construire slug.domain (sans tiret dans le slug)
+            const cleanSlug = s.slug.replace(/-/g, ''); // Retirer les tirets
+            fullDomain = `${cleanSlug}.${s.domain}`;
+          }
           
           return {
             slug: s.slug,
