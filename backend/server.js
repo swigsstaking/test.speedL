@@ -16,6 +16,7 @@ import contentRoutes from './src/routes/content.routes.js';
 import mediaRoutes from './src/routes/media.routes.js';
 import webhookRoutes from './src/routes/webhook.routes.js';
 import contactRoutes from './src/routes/contact.routes.js';
+import userRoutes from './src/routes/user.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -56,6 +57,7 @@ app.use('/uploads', express.static('uploads'));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/sites', siteRoutes);
 app.use('/api/seo', seoRoutes);
 app.use('/api/courses', courseRoutes);

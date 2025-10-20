@@ -8,6 +8,7 @@ import {
   reorderCourses,
 } from '../controllers/course.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
+import { checkSiteAccess } from '../middleware/permissions.middleware.js';
 
 const router = express.Router();
 
@@ -15,10 +16,10 @@ const router = express.Router();
 router.get('/', getCourses);
 router.get('/:id', getCourse);
 
-// Routes protégées (POST, PUT, DELETE)
-router.post('/', protect, createCourse);
-router.put('/reorder', protect, reorderCourses);
-router.put('/:id', protect, updateCourse);
-router.delete('/:id', protect, deleteCourse);
+// Routes protégées (POST, PUT, DELETE) avec vérification d'accès au site
+router.post('/', protect, checkSiteAccess, createCourse);
+router.put('/reorder', protect, checkSiteAccess, reorderCourses);
+router.put('/:id', protect, checkSiteAccess, updateCourse);
+router.delete('/:id', protect, checkSiteAccess, deleteCourse);
 
 export default router;

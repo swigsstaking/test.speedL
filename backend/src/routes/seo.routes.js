@@ -6,6 +6,7 @@ import {
   deleteSEO,
 } from '../controllers/seo.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
+import { checkSiteAccess } from '../middleware/permissions.middleware.js';
 
 const router = express.Router();
 
@@ -13,8 +14,8 @@ const router = express.Router();
 router.get('/', getSEO);
 router.get('/:id', getSEOById);
 
-// Routes protégées (POST, DELETE)
-router.post('/', protect, upsertSEO);
-router.delete('/:id', protect, deleteSEO);
+// Routes protégées (POST, DELETE) avec vérification d'accès au site
+router.post('/', protect, checkSiteAccess, upsertSEO);
+router.delete('/:id', protect, checkSiteAccess, deleteSEO);
 
 export default router;
