@@ -9,13 +9,17 @@ export async function checkSiteUptime(url) {
   try {
     const response = await axios.get(url, {
       timeout: 10000, // 10s timeout
+      maxRedirects: 5, // Suivre les redirections
       validateStatus: (status) => status < 500, // Accepter 4xx mais pas 5xx
+      headers: {
+        'User-Agent': 'SWIGS-Monitor/1.0'
+      }
     });
     
     const latency = Date.now() - startTime;
     
     return {
-      status: response.status < 400 ? 'online' : 'warning',
+      status: response.status >= 200 && response.status < 400 ? 'online' : 'warning',
       latency,
       statusCode: response.status,
       timestamp: new Date(),
@@ -23,10 +27,13 @@ export async function checkSiteUptime(url) {
   } catch (error) {
     const latency = Date.now() - startTime;
     
+    // Si c'est une erreur de timeout ou réseau, mais pas 404
+    const isNetworkError = error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND';
+    
     return {
-      status: 'offline',
+      status: isNetworkError ? 'offline' : 'warning',
       latency,
-      statusCode: 0,
+      statusCode: error.response?.status || 0,
       error: error.message,
       timestamp: new Date(),
     };

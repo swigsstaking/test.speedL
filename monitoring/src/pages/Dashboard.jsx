@@ -103,8 +103,8 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Dashboard</h2>
-          <p className="text-slate-500 mt-1">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h2>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             {currentTime.toLocaleDateString('fr-FR', { 
               weekday: 'long', 
               year: 'numeric', 
@@ -127,10 +127,10 @@ const Dashboard = () => {
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 font-medium">{stat.label}</p>
-                <p className="text-3xl font-bold text-slate-900 mt-2">{stat.value}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{stat.label}</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-2">{stat.value}</p>
                 <p className={`text-sm mt-2 ${
-                  stat.change.startsWith('+') ? 'text-emerald-600' : 'text-red-600'
+                  stat.change.startsWith('+') ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
                 }`}>
                   {stat.change} vs hier
                 </p>
@@ -189,7 +189,7 @@ const Dashboard = () => {
           </div>
           <div className="space-y-4">
             {servers.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
+              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                 Aucun serveur connecté
               </div>
             ) : (
@@ -200,15 +200,15 @@ const Dashboard = () => {
                 const disk = metrics?.disk?.[0]?.percent || 0;
                 
                 return (
-                  <div key={server._id} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <div key={server._id} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className={`w-2 h-2 rounded-full ${
                           server.status === 'online' ? 'bg-emerald-500' : 'bg-red-500'
                         } animate-pulse`}></div>
-                        <span className="font-medium text-slate-900">{server.name || server.serverId}</span>
+                        <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{server.name || server.serverId}</span>
                       </div>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
                         {server.status === 'online' ? 'En ligne' : 'Hors ligne'}
                       </span>
                     </div>
@@ -218,8 +218,8 @@ const Dashboard = () => {
                           <Cpu className="w-3 h-3" />
                           CPU
                         </div>
-                        <div className="text-sm font-semibold text-slate-900">{cpu.toFixed(1)}%</div>
-                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{cpu.toFixed(1)}%</div>
+                        <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5 mt-1">
                           <div 
                             className={`h-1.5 rounded-full ${
                               cpu > 80 ? 'bg-red-500' : 
@@ -235,7 +235,7 @@ const Dashboard = () => {
                           RAM
                         </div>
                         <div className="text-sm font-semibold text-slate-900">{ram.toFixed(1)}%</div>
-                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                        <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5 mt-1">
                           <div 
                             className={`h-1.5 rounded-full ${
                               ram > 80 ? 'bg-red-500' : 
@@ -251,7 +251,7 @@ const Dashboard = () => {
                           Disque
                         </div>
                         <div className="text-sm font-semibold text-slate-900">{disk.toFixed(1)}%</div>
-                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                        <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5 mt-1">
                           <div 
                             className={`h-1.5 rounded-full ${
                               disk > 80 ? 'bg-red-500' : 
@@ -286,15 +286,15 @@ const Dashboard = () => {
           </div>
           <div className="space-y-3">
             {sites.map((site) => (
-              <div key={site.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
+              <div key={site.id} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1">
                     <div className={`w-2 h-2 rounded-full ${
                       site.status === 'online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'
                     }`}></div>
                     <div className="flex-1">
-                      <div className="font-medium text-slate-900">{site.name}</div>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-slate-500">
+                      <div className="font-medium text-slate-900 dark:text-slate-100">{site.name}</div>
+                      <div className="flex items-center gap-4 mt-1 text-xs text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1">
                           <Wifi className="w-3 h-3" />
                           {site.latency}ms
