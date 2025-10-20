@@ -28,6 +28,12 @@ export const monitoringApi = {
     return response.data;
   },
 
+  // Récupérer un site spécifique avec historique
+  getSite: async (siteId, period = '24h') => {
+    const response = await api.get(`/sites/${siteId}?period=${period}`);
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');

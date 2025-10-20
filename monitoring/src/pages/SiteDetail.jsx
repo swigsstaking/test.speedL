@@ -18,6 +18,13 @@ const SiteDetail = () => {
     refetchInterval: 30000,
   });
 
+  const { data: siteHistoryData } = useQuery({
+    queryKey: ['site-history', siteId, period],
+    queryFn: () => monitoringApi.getSite(siteId, period),
+    enabled: !!siteId,
+    refetchInterval: 60000,
+  });
+
   const site = sitesData?.data?.find(s => s.id === siteId);
 
   const periods = [
@@ -37,14 +44,16 @@ const SiteDetail = () => {
     );
   }
 
-  // Utiliser uniquement les données réelles actuelles
-  // Pas d'historique disponible pour l'instant
-  const now = new Date();
-  const historyData = [{
-    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-    latency: site.latency || 0,
-    uptime: site.uptime || 0,
-  }];
+  // Transformer les données d'historique pour les graphiques
+  const historyData = siteHistoryData?.data?.metrics?.map(m => ({
+    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
+    }),
+    latency: m.latency || 0,
+    uptime: m.status === 'online' ? 100 : 0,
+  })) || [];
 
   return (
     <div className="space-y-6">

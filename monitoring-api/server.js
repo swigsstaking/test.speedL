@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import ServerMetric from './src/models/ServerMetric.js';
+import SiteMetric from './src/models/SiteMetric.js';
 
 dotenv.config();
 
@@ -201,6 +202,53 @@ app.get('/api/servers/:serverId', async (req, res) => {
   }
 });
 
+// Historique d'un site spécifique
+app.get('/api/sites/:siteId', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const { period = '24h' } = req.query;
+    
+    console.log(`📊 Récupération historique site ${siteId} (${period})`);
+    
+    // Calculer la date de début selon la période
+    const now = Date.now();
+    let startDate;
+    
+    switch (period) {
+      case '1h':
+        startDate = new Date(now - 60 * 60 * 1000);
+        break;
+      case '24h':
+        startDate = new Date(now - 24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        startDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        startDate = new Date(now - 30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = new Date(now - 24 * 60 * 60 * 1000);
+    }
+
+    const metrics = await SiteMetric.find({
+      siteId,
+      timestamp: { $gte: startDate }
+    }).sort({ timestamp: 1 }).limit(200);
+
+    res.json({ 
+      success: true, 
+      data: {
+        siteId,
+        metrics
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur récupération historique site:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Sites - Version complète avec vérification uptime/SSL
 app.get('/api/sites', async (req, res) => {
   try {
@@ -264,6 +312,19 @@ app.get('/api/sites', async (req, res) => {
           
           console.log(`✅ ${site.slug}: ${uptimeCheck.status} (${uptimeCheck.latency}ms)`);
           console.log(`   SSL: ${sslCheck.valid ? 'Valide' : 'Invalide'}, expire dans ${sslCheck.expiresIn} jours`);
+          
+          // Sauvegarder la métrique dans MongoDB
+          try {
+            await SiteMetric.create({
+              siteId: site.slug,
+              status: uptimeCheck.status,
+              latency: uptimeCheck.latency,
+              statusCode: uptimeCheck.statusCode
+            });
+            console.log(`💾 Métrique site sauvegardée pour ${site.slug}`);
+          } catch (saveError) {
+            console.error(`❌ Erreur sauvegarde métrique ${site.slug}:`, saveError.message);
+          }
           
           return {
             id: site.slug,
