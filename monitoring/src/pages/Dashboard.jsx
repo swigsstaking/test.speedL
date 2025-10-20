@@ -39,6 +39,12 @@ const Dashboard = () => {
   const servers = serversData?.data || [];
   const sites = sitesData?.data || [];
 
+  // Données pour les graphiques (placeholder pour l'instant)
+  const mockCpuData = Array.from({ length: 20 }, (_, i) => ({
+    time: `${i}:00`,
+    value: Math.random() * 100,
+  }));
+
   // Calculer les stats depuis les vraies données
   const activeServers = servers.filter(s => s.status === 'online').length;
   const avgCpu = servers.length > 0 
