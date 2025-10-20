@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Globe, Wifi, TrendingUp, Clock, AlertCircle, CheckCircle, Shield, Calendar } from 'lucide-react';
@@ -8,6 +9,7 @@ import { monitoringApi } from '../services/api';
 const SiteDetail = () => {
   const { siteId } = useParams();
   const navigate = useNavigate();
+  const [period, setPeriod] = useState('24h');
 
   const { data: sitesData } = useQuery({
     queryKey: ['sites'],
@@ -17,6 +19,15 @@ const SiteDetail = () => {
 
   const site = sitesData?.data?.find(s => s.id === siteId);
 
+  const periods = [
+    { value: '1h', label: '1h', points: 12 },
+    { value: '24h', label: '24h', points: 24 },
+    { value: '7d', label: '7j', points: 7 * 24 },
+    { value: '30d', label: '30j', points: 30 },
+  ];
+
+  const selectedPeriod = periods.find(p => p.value === period);
+
   if (!site) {
     return (
       <div className="text-center py-12">
@@ -25,14 +36,26 @@ const SiteDetail = () => {
     );
   }
 
-  // Générer données historiques (24h)
-  const last24h = Array.from({ length: 24 }, (_, i) => {
-    const hour = new Date();
-    hour.setHours(hour.getHours() - (23 - i));
+  // Générer données historiques selon la période
+  const historyData = Array.from({ length: selectedPeriod.points }, (_, i) => {
+    const date = new Date();
+    
+    if (period === '1h') {
+      date.setMinutes(date.getMinutes() - (selectedPeriod.points - 1 - i) * 5);
+    } else if (period === '24h') {
+      date.setHours(date.getHours() - (selectedPeriod.points - 1 - i));
+    } else if (period === '7d') {
+      date.setHours(date.getHours() - (selectedPeriod.points - 1 - i));
+    } else if (period === '30d') {
+      date.setDate(date.getDate() - (selectedPeriod.points - 1 - i));
+    }
+    
     return {
-      time: hour.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      time: period === '30d' 
+        ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+        : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
       latency: site.latency + Math.random() * 20 - 10,
-      uptime: site.status === 'online' ? 100 : Math.random() * 100,
+      uptime: site.status === 'online' ? 98 + Math.random() * 2 : Math.random() * 100,
     };
   });
 
@@ -147,11 +170,25 @@ const SiteDetail = () => {
           className="card"
         >
           <div className="card-header">
-            <h3 className="card-title">Latence (24h)</h3>
-            <span className="text-sm text-slate-500 dark:text-slate-400">Temps de réponse</span>
+            <h3 className="card-title">Latence</h3>
+            <div className="flex gap-2">
+              {periods.map(p => (
+                <button
+                  key={p.value}
+                  onClick={() => setPeriod(p.value)}
+                  className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                    period === p.value
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={last24h}>
+            <AreaChart data={historyData}>
               <defs>
                 <linearGradient id="colorLatency" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
@@ -188,11 +225,11 @@ const SiteDetail = () => {
           className="card"
         >
           <div className="card-header">
-            <h3 className="card-title">Disponibilité (24h)</h3>
-            <span className="text-sm text-slate-500 dark:text-slate-400">Uptime</span>
+            <h3 className="card-title">Disponibilité</h3>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Uptime {period}</span>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={last24h}>
+            <LineChart data={historyData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
               <YAxis stroke="#64748b" fontSize={12} domain={[0, 100]} />
