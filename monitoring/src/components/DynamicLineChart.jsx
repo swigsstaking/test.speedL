@@ -22,23 +22,20 @@ const DynamicLineChart = ({
     return normalColor;
   };
 
-  // Enrichir les données avec la couleur
-  const enrichedData = data.map(point => ({
-    ...point,
-    color: getColor(point[dataKey])
-  }));
+  // Vérifier si on a des données
+  if (!data || data.length === 0) {
+    return (
+      <ResponsiveContainer width="100%" height={height}>
+        <div className="flex items-center justify-center h-full text-slate-400">
+          Aucune donnée disponible
+        </div>
+      </ResponsiveContainer>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={enrichedData}>
-        <defs>
-          {/* Gradient pour la ligne */}
-          <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={normalColor} stopOpacity={0.8}/>
-            <stop offset="100%" stopColor={normalColor} stopOpacity={0.1}/>
-          </linearGradient>
-        </defs>
-        
+      <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
         <YAxis stroke="#64748b" fontSize={12} domain={yDomain} />
@@ -48,7 +45,7 @@ const DynamicLineChart = ({
             border: '1px solid #e2e8f0',
             borderRadius: '8px',
           }}
-          formatter={(value) => [`${value.toFixed(1)}${unit}`, dataKey === 'latency' ? 'Latence' : 'Valeur']}
+          formatter={(value) => [`${value?.toFixed(1)}${unit}`, dataKey === 'latency' ? 'Latence' : 'Valeur']}
           labelStyle={{ fontWeight: 'bold' }}
         />
         
@@ -68,7 +65,7 @@ const DynamicLineChart = ({
           label={{ value: `${dangerThreshold}${unit}`, position: 'right', fill: dangerColor, fontSize: 10 }}
         />
         
-        {/* Une seule ligne avec couleur dynamique via stroke */}
+        {/* Ligne continue avec points colorés */}
         <Line
           type="monotone"
           dataKey={dataKey}
@@ -76,20 +73,21 @@ const DynamicLineChart = ({
           strokeWidth={2}
           dot={(props) => {
             const { cx, cy, payload } = props;
+            if (!payload || payload[dataKey] === undefined) return null;
             const color = getColor(payload[dataKey]);
             return (
               <circle 
                 cx={cx} 
                 cy={cy} 
-                r={3} 
+                r={2} 
                 fill={color}
-                stroke={color}
-                strokeWidth={2}
+                stroke="none"
               />
             );
           }}
-          activeDot={{ r: 6 }}
+          activeDot={{ r: 5, fill: dangerColor }}
           isAnimationActive={true}
+          connectNulls={true}
         />
       </LineChart>
     </ResponsiveContainer>

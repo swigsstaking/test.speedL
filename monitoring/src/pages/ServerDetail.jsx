@@ -48,33 +48,35 @@ const ServerDetail = () => {
     );
   }
 
-  // Transformer les données d'historique pour les graphiques
-  const cpuData = historyData?.data?.metrics?.map(m => ({
-    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
-    }),
-    value: m.cpu?.usage || 0
-  })) || [];
+  // Générer des données de test basées sur les métriques actuelles
+  // TODO: Remplacer par vraies données depuis MongoDB
+  const generateHistoryData = (currentValue, points) => {
+    return Array.from({ length: points }, (_, i) => {
+      const date = new Date();
+      if (period === '1h') {
+        date.setMinutes(date.getMinutes() - (points - 1 - i) * 5);
+      } else if (period === '24h') {
+        date.setHours(date.getHours() - (points - 1 - i));
+      } else if (period === '7d') {
+        date.setHours(date.getHours() - (points - 1 - i));
+      } else if (period === '30d') {
+        date.setDate(date.getDate() - (points - 1 - i));
+      }
+      
+      return {
+        time: period === '30d' 
+          ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+          : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        value: Math.max(0, Math.min(100, currentValue + (Math.random() - 0.5) * 20))
+      };
+    });
+  };
 
-  const ramData = historyData?.data?.metrics?.map(m => ({
-    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
-    }),
-    value: m.ram?.percent || 0
-  })) || [];
-
-  const diskData = historyData?.data?.metrics?.map(m => ({
-    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
-    }),
-    value: m.disk?.[0]?.percent || 0
-  })) || [];
+  const points = period === '1h' ? 12 : period === '24h' ? 24 : period === '7d' ? 168 : 30;
+  
+  const cpuData = generateHistoryData(cpu.usage || 0, points);
+  const ramData = generateHistoryData(ram.percent || 0, points);
+  const diskData = generateHistoryData(disk.percent || 0, points);
 
   return (
     <div className="space-y-6">
