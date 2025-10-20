@@ -37,28 +37,14 @@ const SiteDetail = () => {
     );
   }
 
-  // Générer données historiques selon la période
-  const historyData = Array.from({ length: selectedPeriod.points }, (_, i) => {
-    const date = new Date();
-    
-    if (period === '1h') {
-      date.setMinutes(date.getMinutes() - (selectedPeriod.points - 1 - i) * 5);
-    } else if (period === '24h') {
-      date.setHours(date.getHours() - (selectedPeriod.points - 1 - i));
-    } else if (period === '7d') {
-      date.setHours(date.getHours() - (selectedPeriod.points - 1 - i));
-    } else if (period === '30d') {
-      date.setDate(date.getDate() - (selectedPeriod.points - 1 - i));
-    }
-    
-    return {
-      time: period === '30d' 
-        ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-        : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      latency: site.latency + Math.random() * 20 - 10,
-      uptime: site.status === 'online' ? 98 + Math.random() * 2 : Math.random() * 100,
-    };
-  });
+  // Utiliser uniquement les données réelles actuelles
+  // Pas d'historique disponible pour l'instant
+  const now = new Date();
+  const historyData = [{
+    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    latency: site.latency || 0,
+    uptime: site.uptime || 0,
+  }];
 
   return (
     <div className="space-y-6">

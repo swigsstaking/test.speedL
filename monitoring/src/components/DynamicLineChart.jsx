@@ -65,30 +65,27 @@ const DynamicLineChart = ({
           label={{ value: `${dangerThreshold}${unit}`, position: 'right', fill: dangerColor, fontSize: 10 }}
         />
         
-        {/* Ligne continue avec points colorés */}
-        <Line
-          type="monotone"
-          dataKey={dataKey}
-          stroke={normalColor}
-          strokeWidth={2}
-          dot={(props) => {
-            const { cx, cy, payload } = props;
-            if (!payload || payload[dataKey] === undefined) return null;
-            const color = getColor(payload[dataKey]);
-            return (
-              <circle 
-                cx={cx} 
-                cy={cy} 
-                r={2} 
-                fill={color}
-                stroke="none"
-              />
-            );
-          }}
-          activeDot={{ r: 5, fill: dangerColor }}
-          isAnimationActive={true}
-          connectNulls={true}
-        />
+        {/* Ligne colorée selon les seuils */}
+        {data.map((point, index) => {
+          if (index === data.length - 1) return null;
+          const nextPoint = data[index + 1];
+          const value = point[dataKey];
+          const color = getColor(value);
+          
+          return (
+            <Line
+              key={`segment-${index}`}
+              data={[point, nextPoint]}
+              type="monotone"
+              dataKey={dataKey}
+              stroke={color}
+              strokeWidth={3}
+              dot={false}
+              isAnimationActive={false}
+              connectNulls={true}
+            />
+          );
+        })}
       </LineChart>
     </ResponsiveContainer>
   );

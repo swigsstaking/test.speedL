@@ -48,35 +48,23 @@ const ServerDetail = () => {
     );
   }
 
-  // Générer des données de test basées sur les métriques actuelles
-  // TODO: Remplacer par vraies données depuis MongoDB
-  const generateHistoryData = (currentValue, points) => {
-    return Array.from({ length: points }, (_, i) => {
-      const date = new Date();
-      if (period === '1h') {
-        date.setMinutes(date.getMinutes() - (points - 1 - i) * 5);
-      } else if (period === '24h') {
-        date.setHours(date.getHours() - (points - 1 - i));
-      } else if (period === '7d') {
-        date.setHours(date.getHours() - (points - 1 - i));
-      } else if (period === '30d') {
-        date.setDate(date.getDate() - (points - 1 - i));
-      }
-      
-      return {
-        time: period === '30d' 
-          ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-          : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-        value: Math.max(0, Math.min(100, currentValue + (Math.random() - 0.5) * 20))
-      };
-    });
-  };
-
-  const points = period === '1h' ? 12 : period === '24h' ? 24 : period === '7d' ? 168 : 30;
+  // Utiliser uniquement les données réelles actuelles
+  // Pas d'historique disponible pour l'instant
+  const now = new Date();
+  const cpuData = [{
+    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    value: cpu.usage || 0
+  }];
   
-  const cpuData = generateHistoryData(cpu.usage || 0, points);
-  const ramData = generateHistoryData(ram.percent || 0, points);
-  const diskData = generateHistoryData(disk.percent || 0, points);
+  const ramData = [{
+    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    value: ram.percent || 0
+  }];
+  
+  const diskData = [{
+    time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    value: disk.percent || 0
+  }];
 
   return (
     <div className="space-y-6">
