@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, Users, AlertCircle, CheckCircle, Mail, Phone, User } from 'lucide-react'
+import { BookOpen, Clock, Users, CheckCircle, Award, TrendingUp } from 'lucide-react'
+import SEOHead from '../components/SEOHead'
+import { Calendar, Users as UsersIcon, AlertCircle, CheckCircle as CheckCircleIcon, Mail, Phone, User } from 'lucide-react'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -54,6 +56,8 @@ const Courses = () => {
 
   return (
     <div>
+      <SEOHead page="courses" />
+      
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

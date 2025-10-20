@@ -1,0 +1,74 @@
+{
+  "site": {
+    "name": "Speed-L",
+    "slug": "speed-l",
+    "domain": "swigs.online",
+    "description": "Auto-école Speed-L à Sion - Permis de conduire, cours de conduite et formations"
+  },
+  "pages": {
+    "home": {
+      "title": "Speed-L - Auto-école à Sion | Permis de conduire",
+      "description": "Auto-école Speed-L à Sion. Cours de conduite, permis voiture, moto et formations. Moniteurs expérimentés, taux de réussite élevé. Contactez-nous !",
+      "keywords": "auto-école, Sion, permis de conduire, cours de conduite, Speed-L, Valais",
+      "ogTitle": "Speed-L - Auto-école à Sion",
+      "ogDescription": "Votre auto-école de confiance à Sion. Cours de conduite et formations au permis.",
+      "ogImage": null,
+      "twitterCard": "summary_large_image",
+      "canonical": null,
+      "robots": "index,follow"
+    },
+    "courses": {
+      "title": "Nos Formations | Speed-L Auto-école Sion",
+      "description": "Découvrez nos formations : permis voiture, moto, cours sensibilisation, cours premiers secours. Programmes adaptés à tous les niveaux.",
+      "keywords": "formations, cours de conduite, permis voiture, permis moto, Sion",
+      "ogTitle": "Formations Speed-L",
+      "ogDescription": "Toutes nos formations pour obtenir votre permis de conduire",
+      "ogImage": null,
+      "twitterCard": "summary_large_image",
+      "canonical": null,
+      "robots": "index,follow"
+    },
+    "permits": {
+      "title": "Permis de Conduire | Speed-L Sion",
+      "description": "Tous les types de permis : voiture (B), moto (A), cyclomoteur. Informations, tarifs et inscriptions.",
+      "keywords": "permis B, permis A, permis voiture, permis moto, Sion",
+      "ogTitle": "Permis de conduire - Speed-L",
+      "ogDescription": "Obtenez votre permis avec Speed-L",
+      "ogImage": null,
+      "twitterCard": "summary_large_image",
+      "canonical": null,
+      "robots": "index,follow"
+    },
+    "gift-cards": {
+      "title": "Bons Cadeaux | Speed-L Auto-école Sion",
+      "description": "Offrez un bon cadeau Speed-L ! Le cadeau parfait pour futurs conducteurs. Différents montants disponibles.",
+      "keywords": "bon cadeau, cadeau permis, auto-école, Speed-L, Sion",
+      "ogTitle": "Bons Cadeaux Speed-L",
+      "ogDescription": "Offrez le cadeau de la liberté avec un bon cadeau Speed-L",
+      "ogImage": null,
+      "twitterCard": "summary_large_image",
+      "canonical": null,
+      "robots": "index,follow"
+    },
+    "contact": {
+      "title": "Contact | Speed-L Auto-école Sion",
+      "description": "Contactez Speed-L à Sion. Adresse, téléphone, email, horaires. Nous sommes à votre disposition pour toute question.",
+      "keywords": "contact, Speed-L, Sion, auto-école, téléphone, adresse",
+      "ogTitle": "Contactez Speed-L",
+      "ogDescription": "Nous sommes à votre disposition pour répondre à vos questions",
+      "ogImage": null,
+      "twitterCard": "summary_large_image",
+      "canonical": null,
+      "robots": "index,follow"
+    }
+  },
+  "global": {
+    "siteName": "Speed-L",
+    "siteUrl": "https://swigs.online",
+    "logo": null,
+    "favicon": null,
+    "language": "fr",
+    "social": {}
+  },
+  "generatedAt": "2025-01-20T12:00:00.000Z"
+}

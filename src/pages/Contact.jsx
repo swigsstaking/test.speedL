@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle, User, MessageSquare, Facebook, Instagram, AlertCircle } from 'lucide-react'
+import SEOHead from '../components/SEOHead'
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://swigs.online/api'
 
@@ -108,6 +109,8 @@ const Contact = () => {
 
   return (
     <div>
+      <SEOHead page="contact" />
+      
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

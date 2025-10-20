@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { CheckCircle, Award, MapPin, Car, Users, TrendingUp, Star } from 'lucide-react'
+import SEOHead from '../components/SEOHead'
 
 const Home = () => {
   const advantages = [
@@ -49,6 +50,8 @@ const Home = () => {
 
   return (
     <div>
+      <SEOHead page="home" />
+      
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-gray-800 text-white">
         <div className="absolute inset-0 bg-black opacity-20"></div>

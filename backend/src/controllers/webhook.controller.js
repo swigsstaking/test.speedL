@@ -1,8 +1,8 @@
-import { exec } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import logger from '../utils/logger.js';
 import fs from 'fs';
+import rebuildSiteScript from '../scripts/rebuild-site.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,26 +10,25 @@ const __dirname = path.dirname(__filename);
 // Rebuild le site Speed-L
 export const rebuildSite = async (req, res) => {
   try {
-    const scriptPath = path.join(__dirname, '../../../rebuild-site.sh');
-    
     logger.info('Déclenchement du rebuild du site...');
     
-    // Exécuter le script en arrière-plan
-    exec(`bash ${scriptPath}`, (error, stdout, stderr) => {
-      if (error) {
-        logger.error('Erreur lors du rebuild:', error.message);
-        return;
+    // Exécuter le rebuild en arrière-plan
+    rebuildSiteScript({
+      skipDeploy: process.env.NODE_ENV !== 'production',
+    }).then((result) => {
+      if (result.success) {
+        logger.success(`Rebuild terminé en ${result.duration}s`);
+      } else {
+        logger.error(`Rebuild échoué: ${result.error}`);
       }
-      logger.success('Rebuild terminé');
-      if (stderr) {
-        logger.warn('Warnings:', stderr);
-      }
+    }).catch((error) => {
+      logger.error('Erreur rebuild:', error.message);
     });
     
     // Répondre immédiatement (le rebuild se fait en arrière-plan)
     res.json({
       success: true,
-      message: 'Rebuild du site déclenché. Le site sera mis à jour dans 30-60 secondes.',
+      message: 'Rebuild du site déclenché. Le site sera mis à jour dans 1-2 minutes.',
     });
   } catch (error) {
     logger.error('Erreur webhook rebuild:', error.message);
