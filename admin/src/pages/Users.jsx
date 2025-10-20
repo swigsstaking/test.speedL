@@ -125,12 +125,12 @@ export default function Users() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-100">Utilisateurs</h1>
-          <p className="text-gray-400 mt-1">Gérer les utilisateurs et leurs accès</p>
+          <h1 className="text-3xl font-bold text-gray-100 mb-2">Utilisateurs</h1>
+          <p className="text-gray-400">Gérer les utilisateurs et leurs accès</p>
         </div>
         <button
           onClick={() => {
