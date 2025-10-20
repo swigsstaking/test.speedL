@@ -1,52 +1,69 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Server, Globe, Activity, TrendingUp, Cpu, HardDrive, Wifi, AlertCircle } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
-
-// Données de démonstration (à remplacer par vraies données API)
-const mockServers = [
-  { id: 1, name: 'Server 1', cpu: 45, ram: 62, disk: 38, status: 'online' },
-  { id: 2, name: 'Server 2', cpu: 78, ram: 85, disk: 72, status: 'warning' },
-  { id: 3, name: 'Server 3', cpu: 12, ram: 28, disk: 15, status: 'online' },
-];
-
-const mockSites = [
-  { id: 1, name: 'speedl.swigs.online', status: 'online', latency: 45, uptime: 99.9 },
-  { id: 2, name: 'admin.swigs.online', status: 'online', latency: 32, uptime: 100 },
-  { id: 3, name: 'autre-site.com', status: 'offline', latency: 0, uptime: 0 },
-];
-
-const mockCpuData = Array.from({ length: 20 }, (_, i) => ({
-  time: `${i}:00`,
-  value: Math.random() * 100,
-}));
+import { monitoringApi } from '../services/api';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { isConnected, latestMetric } = useWebSocket();
+
+  // Récupérer les serveurs
+  const { data: serversData, refetch: refetchServers } = useQuery({
+    queryKey: ['servers'],
+    queryFn: monitoringApi.getServers,
+    refetchInterval: 10000, // Refresh toutes les 10s
+  });
+
+  // Récupérer les sites
+  const { data: sitesData } = useQuery({
+    queryKey: ['sites'],
+    queryFn: monitoringApi.getSites,
+    refetchInterval: 30000, // Refresh toutes les 30s
+  });
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Refetch quand nouvelle métrique arrive via WebSocket
+  useEffect(() => {
+    if (latestMetric) {
+      refetchServers();
+    }
+  }, [latestMetric, refetchServers]);
+
+  const servers = serversData?.data || [];
+  const sites = sitesData?.data || [];
+
+  // Calculer les stats depuis les vraies données
+  const activeServers = servers.filter(s => s.status === 'online').length;
+  const avgCpu = servers.length > 0 
+    ? Math.round(servers.reduce((sum, s) => sum + (s.metrics?.cpu?.usage || 0), 0) / servers.length)
+    : 0;
+  const onlineSites = sites.filter(s => s.status === 'online').length;
+
   const stats = [
     {
       label: 'Serveurs Actifs',
-      value: '3',
+      value: `${activeServers}`,
       change: '+0%',
       icon: Server,
       color: 'primary',
     },
     {
       label: 'Sites en Ligne',
-      value: '2/3',
-      change: '-33%',
+      value: `${onlineSites}/${sites.length}`,
+      change: sites.length > 0 ? `${Math.round((onlineSites / sites.length) * 100)}%` : '0%',
       icon: Globe,
       color: 'emerald',
     },
     {
       label: 'CPU Moyen',
-      value: '45%',
+      value: `${avgCpu}%`,
       change: '+5%',
       icon: Cpu,
       color: 'amber',
@@ -196,74 +213,88 @@ const Dashboard = () => {
           <div className="card-header">
             <h3 className="card-title">Serveurs</h3>
             <span className="status-badge status-online">
-              {mockServers.length} actifs
+              {activeServers} actifs
             </span>
           </div>
           <div className="space-y-4">
-            {mockServers.map((server) => (
-              <div key={server.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${
-                      server.status === 'online' ? 'bg-emerald-500' : 
-                      server.status === 'warning' ? 'bg-amber-500' : 'bg-red-500'
-                    } animate-pulse`}></div>
-                    <span className="font-medium text-slate-900">{server.name}</span>
-                  </div>
-                  <span className="text-xs text-slate-500">En ligne</span>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
-                      <Cpu className="w-3 h-3" />
-                      CPU
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">{server.cpu}%</div>
-                    <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
-                      <div 
-                        className={`h-1.5 rounded-full ${
-                          server.cpu > 80 ? 'bg-red-500' : 
-                          server.cpu > 60 ? 'bg-amber-500' : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${server.cpu}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
-                      <Activity className="w-3 h-3" />
-                      RAM
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">{server.ram}%</div>
-                    <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
-                      <div 
-                        className={`h-1.5 rounded-full ${
-                          server.ram > 80 ? 'bg-red-500' : 
-                          server.ram > 60 ? 'bg-amber-500' : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${server.ram}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
-                      <HardDrive className="w-3 h-3" />
-                      Disque
-                    </div>
-                    <div className="text-sm font-semibold text-slate-900">{server.disk}%</div>
-                    <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
-                      <div 
-                        className={`h-1.5 rounded-full ${
-                          server.disk > 80 ? 'bg-red-500' : 
-                          server.disk > 60 ? 'bg-amber-500' : 'bg-emerald-500'
-                        }`}
-                        style={{ width: `${server.disk}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
+            {servers.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                Aucun serveur connecté
               </div>
-            ))}
+            ) : (
+              servers.map((server) => {
+                const metrics = server.metrics;
+                const cpu = metrics?.cpu?.usage || 0;
+                const ram = metrics?.ram?.percent || 0;
+                const disk = metrics?.disk?.[0]?.percent || 0;
+                
+                return (
+                  <div key={server._id} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${
+                          server.status === 'online' ? 'bg-emerald-500' : 'bg-red-500'
+                        } animate-pulse`}></div>
+                        <span className="font-medium text-slate-900">{server.name || server.serverId}</span>
+                      </div>
+                      <span className="text-xs text-slate-500">
+                        {server.status === 'online' ? 'En ligne' : 'Hors ligne'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
+                          <Cpu className="w-3 h-3" />
+                          CPU
+                        </div>
+                        <div className="text-sm font-semibold text-slate-900">{cpu.toFixed(1)}%</div>
+                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                          <div 
+                            className={`h-1.5 rounded-full ${
+                              cpu > 80 ? 'bg-red-500' : 
+                              cpu > 60 ? 'bg-amber-500' : 'bg-emerald-500'
+                            }`}
+                            style={{ width: `${cpu}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
+                          <Activity className="w-3 h-3" />
+                          RAM
+                        </div>
+                        <div className="text-sm font-semibold text-slate-900">{ram.toFixed(1)}%</div>
+                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                          <div 
+                            className={`h-1.5 rounded-full ${
+                              ram > 80 ? 'bg-red-500' : 
+                              ram > 60 ? 'bg-amber-500' : 'bg-emerald-500'
+                            }`}
+                            style={{ width: `${ram}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
+                          <HardDrive className="w-3 h-3" />
+                          Disque
+                        </div>
+                        <div className="text-sm font-semibold text-slate-900">{disk.toFixed(1)}%</div>
+                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                          <div 
+                            className={`h-1.5 rounded-full ${
+                              disk > 80 ? 'bg-red-500' : 
+                              disk > 60 ? 'bg-amber-500' : 'bg-emerald-500'
+                            }`}
+                            style={{ width: `${disk}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </motion.div>
 
@@ -276,12 +307,14 @@ const Dashboard = () => {
         >
           <div className="card-header">
             <h3 className="card-title">Sites Web</h3>
-            <span className="status-badge status-warning">
-              1 hors ligne
+            <span className={`status-badge ${
+              sites.length - onlineSites > 0 ? 'status-warning' : 'status-online'
+            }`}>
+              {sites.length - onlineSites > 0 ? `${sites.length - onlineSites} hors ligne` : 'Tous en ligne'}
             </span>
           </div>
           <div className="space-y-3">
-            {mockSites.map((site) => (
+            {sites.map((site) => (
               <div key={site.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1">
@@ -315,7 +348,7 @@ const Dashboard = () => {
       </div>
 
       {/* Alerts */}
-      {mockSites.some(s => s.status === 'offline') && (
+      {sites.some(s => s.status === 'offline') && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
