@@ -33,6 +33,10 @@ const DynamicLineChart = ({
     );
   }
 
+  // Calculer la couleur moyenne pour la ligne
+  const avgValue = data.reduce((sum, point) => sum + (point[dataKey] || 0), 0) / data.length;
+  const lineColor = getColor(avgValue);
+
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart 
@@ -48,7 +52,13 @@ const DynamicLineChart = ({
             border: '1px solid #e2e8f0',
             borderRadius: '8px',
           }}
-          formatter={(value) => [`${value?.toFixed(1)}${unit}`, dataKey === 'latency' ? 'Latence' : 'Valeur']}
+          formatter={(value) => {
+            const color = getColor(value);
+            return [
+              <span style={{ color }}>{value?.toFixed(1)}{unit}</span>,
+              dataKey === 'latency' ? 'Latence' : 'Valeur'
+            ];
+          }}
           labelStyle={{ fontWeight: 'bold' }}
         />
         
@@ -68,13 +78,26 @@ const DynamicLineChart = ({
           label={{ value: `${dangerThreshold}${unit}`, position: 'right', fill: dangerColor, fontSize: 10 }}
         />
         
-        {/* Ligne principale - animation désactivée pour éviter le zoom */}
+        {/* Ligne principale avec couleur selon valeur moyenne */}
         <Line
           type="monotone"
           dataKey={dataKey}
-          stroke={normalColor}
+          stroke={lineColor}
           strokeWidth={2}
-          dot={false}
+          dot={(props) => {
+            const { cx, cy, payload } = props;
+            if (!payload || payload[dataKey] === undefined) return null;
+            const dotColor = getColor(payload[dataKey]);
+            return (
+              <circle 
+                cx={cx} 
+                cy={cy} 
+                r={2} 
+                fill={dotColor}
+                stroke="none"
+              />
+            );
+          }}
           isAnimationActive={false}
           connectNulls={true}
         />
