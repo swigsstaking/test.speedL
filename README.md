@@ -1,89 +1,79 @@
-# Speed-L Auto-école - Site Web
+# 🚀 SWIGS CMS
 
-Site web moderne et dynamique pour l'auto-école Speed-L située à Sion, Valais.
+Système de gestion de contenu multi-sites centralisé.
 
-## 🚗 À propos
+## 📚 Documentation
 
-Speed-L est une auto-école établie depuis près de 30 ans à Sion, offrant des cours de conduite de qualité avec des instructeurs expérimentés et des véhicules modernes.
+### Essentiels
+- **[SWIGS-CMS-GUIDE.md](./SWIGS-CMS-GUIDE.md)** - Guide complet d'utilisation
+- **[INSTALLATION-BACKUP-REDIS.md](./INSTALLATION-BACKUP-REDIS.md)** - Installation backup & cache
+- **[RESUME-AMELIORATIONS.md](./RESUME-AMELIORATIONS.md)** - Résumé des améliorations
 
-## ✨ Fonctionnalités
+### Technique
+- **[SWIGS-CMS-DOCUMENTATION-COMPLETE.md](./SWIGS-CMS-DOCUMENTATION-COMPLETE.md)** - Documentation technique complète
 
-- **Page d'accueil** : Hero attractif, présentation des avantages, témoignages
-- **Cours & Inscriptions** : Présentation détaillée des cours avec dates et formulaire d'inscription
-- **Permis** : Informations complètes sur les différentes catégories de permis (B, BE, moto)
-- **Bons cadeaux** : Système de commande de bons cadeaux en ligne
-- **Contact** : Formulaire de contact, carte Google Maps, informations pratiques
-- **Design responsive** : Optimisé pour tous les appareils (mobile, tablette, desktop)
+## 🏗️ Architecture
 
-## 🛠️ Technologies utilisées
+```
+├── backend/          # API Node.js/Express
+├── admin/            # Panel admin React
+├── src/              # Site public React
+├── scripts/          # Scripts backup/deploy
+└── nginx-configs/    # Configurations Nginx
+```
 
-- **React 18** - Framework JavaScript moderne
-- **Vite** - Build tool rapide et performant
-- **TailwindCSS** - Framework CSS utility-first
-- **React Router** - Navigation entre les pages
-- **Lucide React** - Icônes modernes et élégantes
+## 🚀 Déploiement Rapide
 
-## 🚀 Installation
+### Sur le serveur
 
-1. Installer les dépendances :
 ```bash
+cd ~/websites/speed-l
+git pull origin main
+
+# Backend
+cd backend
 npm install
-```
+pm2 restart backend
 
-2. Lancer le serveur de développement :
-```bash
-npm run dev
-```
-
-3. Ouvrir votre navigateur à l'adresse : `http://localhost:5173`
-
-## 📦 Build pour la production
-
-```bash
+# Admin
+cd ../admin
 npm run build
+sudo cp -r dist/* /var/www/admin/
+
+# Site public
+cd ..
+npm run build
+sudo cp -r dist/* /var/www/speed-l/
 ```
 
-Les fichiers optimisés seront générés dans le dossier `dist/`.
+## 🔧 Commandes Utiles
 
-## 🎨 Personnalisation
+```bash
+# Logs backend
+pm2 logs backend
 
-### Couleurs
+# Backup manuel
+~/scripts/backup-mongodb.sh
 
-Les couleurs principales sont définies dans `tailwind.config.js` :
-- Rouge principal (primary) : utilisé pour les CTA et éléments importants
-- Gris clair : pour les backgrounds et textes secondaires
+# Vérifier Redis
+redis-cli ping
 
-### Contenu
+# Nginx
+sudo nginx -t
+sudo systemctl reload nginx
+```
 
-Pour modifier le contenu :
-- **Cours** : Éditer `src/pages/Courses.jsx`
-- **Permis** : Éditer `src/pages/Permits.jsx`
-- **Témoignages** : Éditer `src/pages/Home.jsx`
-- **Coordonnées** : Éditer `src/components/Layout.jsx` et `src/pages/Contact.jsx`
+## 📊 URLs
 
-## 📱 Réseaux sociaux
+- **Admin** : https://admin.swigs.online
+- **Site** : https://speedl.swigs.online
+- **API** : https://speedl.swigs.online/api
 
-Le site inclut des liens vers :
-- Facebook
-- Instagram
-- TikTok
+## 🔐 Credentials
 
-Mettez à jour les liens dans `src/components/Layout.jsx` et `src/pages/Contact.jsx`.
+- **Email** : admin@swigs.online
+- **Password** : Admin123! (à changer)
 
-## 📍 Carte Google Maps
+---
 
-La carte est intégrée dans la page Contact. Pour personnaliser l'emplacement, modifiez l'URL de l'iframe dans `src/pages/Contact.jsx`.
-
-## 📞 Contact
-
-**Speed-L**  
-Place de la Gare 11  
-1950 Sion  
-Valais, Suisse
-
-📞 079 212 3500  
-✉️ info@speed-l.ch
-
-## 📄 Licence
-
-© 2025 Speed-L. Tous droits réservés.
+*Pour plus de détails, consultez SWIGS-CMS-GUIDE.md*
