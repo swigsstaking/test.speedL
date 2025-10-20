@@ -65,27 +65,16 @@ const DynamicLineChart = ({
           label={{ value: `${dangerThreshold}${unit}`, position: 'right', fill: dangerColor, fontSize: 10 }}
         />
         
-        {/* Ligne colorée selon les seuils */}
-        {data.map((point, index) => {
-          if (index === data.length - 1) return null;
-          const nextPoint = data[index + 1];
-          const value = point[dataKey];
-          const color = getColor(value);
-          
-          return (
-            <Line
-              key={`segment-${index}`}
-              data={[point, nextPoint]}
-              type="monotone"
-              dataKey={dataKey}
-              stroke={color}
-              strokeWidth={3}
-              dot={false}
-              isAnimationActive={false}
-              connectNulls={true}
-            />
-          );
-        })}
+        {/* Ligne principale */}
+        <Line
+          type="monotone"
+          dataKey={dataKey}
+          stroke={normalColor}
+          strokeWidth={2}
+          dot={false}
+          isAnimationActive={true}
+          connectNulls={true}
+        />
       </LineChart>
     </ResponsiveContainer>
   );
