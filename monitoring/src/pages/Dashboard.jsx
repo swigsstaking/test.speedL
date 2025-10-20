@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Server, Globe, Activity, TrendingUp, Cpu, HardDrive, Wifi, AlertCircle } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import { monitoringApi } from '../services/api';
 import { useWebSocket } from '../hooks/useWebSocket';
+import HistoryChart from '../components/HistoryChart';
 
 const Dashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -143,84 +143,34 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* CPU Chart */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="card"
-        >
-          <div className="card-header">
-            <h3 className="card-title">Utilisation CPU (Temps Réel)</h3>
-            <span className="text-sm text-slate-500">Dernières 20 min</span>
-          </div>
-          <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={cpuHistory.length > 0 ? cpuHistory : [{ time: '00:00', value: 0 }]}>
-              <defs>
-                <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
-              <YAxis stroke="#64748b" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#ffffff', 
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#0ea5e9" 
-                strokeWidth={2}
-                fill="url(#colorCpu)" 
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </motion.div>
+      {/* Charts Row - Historique avec sélecteur de période */}
+      {servers.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <HistoryChart 
+              serverId={servers[0].serverId} 
+              metric="cpu"
+              title="Utilisation CPU"
+            />
+          </motion.div>
 
-        {/* RAM Chart */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="card"
-        >
-          <div className="card-header">
-            <h3 className="card-title">Utilisation RAM (Temps Réel)</h3>
-            <span className="text-sm text-slate-500">Dernières 20 min</span>
-          </div>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={ramHistory.length > 0 ? ramHistory : [{ time: '00:00', value: 0 }]}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
-              <YAxis stroke="#64748b" fontSize={12} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#ffffff', 
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#10b981" 
-                strokeWidth={2}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </motion.div>
-      </div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <HistoryChart 
+              serverId={servers[0].serverId} 
+              metric="ram"
+              title="Utilisation RAM"
+            />
+          </motion.div>
+        </div>
+      )}
 
       {/* Servers & Sites Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

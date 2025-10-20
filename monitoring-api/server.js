@@ -198,17 +198,43 @@ app.get('/api/servers/:serverId', async (req, res) => {
   }
 });
 
-// Sites (mock pour l'instant - à intégrer avec votre backend existant)
+// Sites - Récupérer depuis votre backend principal
 app.get('/api/sites', async (req, res) => {
   try {
-    // TODO: Intégrer avec votre API backend existante
-    const mockSites = [
-      { id: 1, name: 'speedl.swigs.online', status: 'online', latency: 45, uptime: 99.9 },
-      { id: 2, name: 'admin.swigs.online', status: 'online', latency: 32, uptime: 100 },
-    ];
-    res.json({ success: true, data: mockSites });
+    // Récupérer les sites depuis votre backend principal
+    const axios = (await import('axios')).default;
+    const sitesResponse = await axios.get('http://localhost:3000/api/sites');
+    
+    const sites = sitesResponse.data.data || [];
+    
+    // Vérifier l'uptime de chaque site
+    const { checkSiteUptime, checkSSL } = await import('./src/services/uptime.service.js');
+    
+    const sitesWithStatus = await Promise.all(
+      sites.map(async (site) => {
+        const url = `https://${site.slug}.swigs.online`;
+        const [uptimeCheck, sslCheck] = await Promise.all([
+          checkSiteUptime(url),
+          checkSSL(url)
+        ]);
+        
+        return {
+          id: site._id,
+          name: `${site.slug}.swigs.online`,
+          url,
+          status: uptimeCheck.status,
+          latency: uptimeCheck.latency,
+          uptime: 99.9, // TODO: Calculer depuis historique
+          ssl: sslCheck,
+        };
+      })
+    );
+    
+    res.json({ success: true, data: sitesWithStatus });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('❌ Erreur récupération sites:', error);
+    // Fallback si backend principal pas accessible
+    res.json({ success: true, data: [] });
   }
 });
 

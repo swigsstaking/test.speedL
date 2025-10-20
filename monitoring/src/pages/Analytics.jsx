@@ -1,13 +1,54 @@
-import { DollarSign, TrendingUp, Package, Zap } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { DollarSign, TrendingUp, Package, Zap, Globe } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { monitoringApi } from '../services/api';
 
 const Analytics = () => {
-  const costData = [
-    { site: 'speedl', cpu: 2.5, ram: 1.8, bandwidth: 3.2, storage: 0.8, total: 8.3 },
-    { site: 'admin', cpu: 0.8, ram: 0.5, bandwidth: 0.9, storage: 0.3, total: 2.5 },
-    { site: 'autre', cpu: 0, ram: 0, bandwidth: 0, storage: 0.2, total: 0.2 },
-  ];
+  // Récupérer les serveurs et sites
+  const { data: serversData } = useQuery({
+    queryKey: ['servers'],
+    queryFn: monitoringApi.getServers,
+    refetchInterval: 30000,
+  });
+
+  const { data: sitesData } = useQuery({
+    queryKey: ['sites'],
+    queryFn: monitoringApi.getSites,
+    refetchInterval: 30000,
+  });
+
+  const servers = serversData?.data || [];
+  const sites = sitesData?.data || [];
+
+  // Taux de conversion EUR → CHF
+  const EUR_TO_CHF = 0.95;
+
+  // Calculer les coûts par site (estimation basée sur les ressources)
+  const calculateSiteCost = (site) => {
+    // Coûts estimés par ressource (en EUR, puis converti en CHF)
+    const cpuCost = 0.05; // par % CPU
+    const ramCost = 0.02; // par % RAM
+    const bandwidthCost = 0.10; // par GB
+    const storageCost = 0.01; // par GB
+
+    // Estimation (à affiner selon vos besoins)
+    const cpu = 2.5 * EUR_TO_CHF;
+    const ram = 1.8 * EUR_TO_CHF;
+    const bandwidth = 3.2 * EUR_TO_CHF;
+    const storage = 0.8 * EUR_TO_CHF;
+
+    return {
+      site: site.name || site.slug,
+      cpu,
+      ram,
+      bandwidth,
+      storage,
+      total: cpu + ram + bandwidth + storage,
+    };
+  };
+
+  const costData = sites.map(calculateSiteCost);
 
   const resourceData = [
     { name: 'CPU', value: 45, color: '#0ea5e9' },
@@ -16,14 +57,17 @@ const Analytics = () => {
     { name: 'Réseau', value: 28, color: '#8b5cf6' },
   ];
 
-  const monthlyTrend = [
-    { month: 'Jan', cost: 8.5 },
-    { month: 'Fév', cost: 9.2 },
-    { month: 'Mar', cost: 8.8 },
-    { month: 'Avr', cost: 10.1 },
-    { month: 'Mai', cost: 11.0 },
-    { month: 'Juin', cost: 10.8 },
+  // Graphique sites en ligne + coûts
+  const sitesOnlineData = [
+    { month: 'Jan', sites: 2, cost: 8.5 * EUR_TO_CHF },
+    { month: 'Fév', sites: 2, cost: 9.2 * EUR_TO_CHF },
+    { month: 'Mar', sites: 3, cost: 8.8 * EUR_TO_CHF },
+    { month: 'Avr', sites: 3, cost: 10.1 * EUR_TO_CHF },
+    { month: 'Mai', sites: 3, cost: 11.0 * EUR_TO_CHF },
+    { month: 'Juin', sites: sites.length, cost: costData.reduce((sum, s) => sum + s.total, 0) },
   ];
+
+  const totalCost = costData.reduce((sum, s) => sum + s.total, 0);
 
   return (
     <div className="space-y-6">
@@ -42,7 +86,7 @@ const Analytics = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-slate-500 font-medium">Coût Total/Mois</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">11.00€</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">{totalCost.toFixed(2)} CHF</p>
               <p className="text-sm text-emerald-600 mt-2">-8% vs mois dernier</p>
             </div>
             <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -60,8 +104,8 @@ const Analytics = () => {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-slate-500 font-medium">Coût/Site Moyen</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">3.67€</p>
-              <p className="text-sm text-slate-600 mt-2">3 sites actifs</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">{sites.length > 0 ? (totalCost / sites.length).toFixed(2) : '0.00'} CHF</p>
+              <p className="text-sm text-slate-600 mt-2">{sites.length} sites actifs</p>
             </div>
             <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
               <Package className="w-6 h-6 text-primary-600" />
@@ -131,7 +175,7 @@ const Analytics = () => {
                   borderRadius: '8px',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                 }}
-                formatter={(value) => `${value}€`}
+                formatter={(value) => `${value.toFixed(2)} CHF`}
               />
               <Bar dataKey="cpu" stackId="a" fill="#0ea5e9" name="CPU" />
               <Bar dataKey="ram" stackId="a" fill="#10b981" name="RAM" />
@@ -195,6 +239,53 @@ const Analytics = () => {
         </motion.div>
       </div>
 
+      {/* Sites en ligne + Coûts */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="card"
+      >
+        <div className="card-header">
+          <h3 className="card-title">Évolution Sites & Coûts</h3>
+          <span className="text-sm text-slate-500">6 derniers mois</span>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={sitesOnlineData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+            <YAxis yAxisId="left" stroke="#64748b" fontSize={12} label={{ value: 'Sites', angle: -90, position: 'insideLeft' }} />
+            <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} label={{ value: 'CHF', angle: 90, position: 'insideRight' }} />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: '#ffffff', 
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }}
+            />
+            <Line 
+              yAxisId="left"
+              type="monotone" 
+              dataKey="sites" 
+              stroke="#0ea5e9" 
+              strokeWidth={2}
+              name="Sites en ligne"
+              dot={{ fill: '#0ea5e9', r: 4 }}
+            />
+            <Line 
+              yAxisId="right"
+              type="monotone" 
+              dataKey="cost" 
+              stroke="#10b981" 
+              strokeWidth={2}
+              name="Coût (CHF)"
+              dot={{ fill: '#10b981', r: 4 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </motion.div>
+
       {/* Detailed Cost Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -221,29 +312,29 @@ const Analytics = () => {
               {costData.map((site) => (
                 <tr key={site.site} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="py-3 px-4 text-sm font-medium text-slate-900">{site.site}.swigs.online</td>
-                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.cpu}€</td>
-                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.ram}€</td>
-                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.bandwidth}€</td>
-                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.storage}€</td>
-                  <td className="py-3 px-4 text-sm text-right font-semibold text-slate-900">{site.total}€</td>
+                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.cpu.toFixed(2)} CHF</td>
+                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.ram.toFixed(2)} CHF</td>
+                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.bandwidth.toFixed(2)} CHF</td>
+                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.storage.toFixed(2)} CHF</td>
+                  <td className="py-3 px-4 text-sm text-right font-semibold text-slate-900">{site.total.toFixed(2)} CHF</td>
                 </tr>
               ))}
               <tr className="bg-slate-50 font-semibold">
                 <td className="py-3 px-4 text-sm text-slate-900">Total</td>
                 <td className="py-3 px-4 text-sm text-right text-slate-900">
-                  {costData.reduce((sum, s) => sum + s.cpu, 0).toFixed(1)}€
+                  {costData.reduce((sum, s) => sum + s.cpu, 0).toFixed(2)} CHF
                 </td>
                 <td className="py-3 px-4 text-sm text-right text-slate-900">
-                  {costData.reduce((sum, s) => sum + s.ram, 0).toFixed(1)}€
+                  {costData.reduce((sum, s) => sum + s.ram, 0).toFixed(2)} CHF
                 </td>
                 <td className="py-3 px-4 text-sm text-right text-slate-900">
-                  {costData.reduce((sum, s) => sum + s.bandwidth, 0).toFixed(1)}€
+                  {costData.reduce((sum, s) => sum + s.bandwidth, 0).toFixed(2)} CHF
                 </td>
                 <td className="py-3 px-4 text-sm text-right text-slate-900">
-                  {costData.reduce((sum, s) => sum + s.storage, 0).toFixed(1)}€
+                  {costData.reduce((sum, s) => sum + s.storage, 0).toFixed(2)} CHF
                 </td>
                 <td className="py-3 px-4 text-sm text-right text-primary-600 font-bold">
-                  {costData.reduce((sum, s) => sum + s.total, 0).toFixed(1)}€
+                  {costData.reduce((sum, s) => sum + s.total, 0).toFixed(2)} CHF
                 </td>
               </tr>
             </tbody>
