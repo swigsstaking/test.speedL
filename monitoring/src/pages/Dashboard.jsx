@@ -39,11 +39,26 @@ const Dashboard = () => {
   const servers = serversData?.data || [];
   const sites = sitesData?.data || [];
 
-  // Données pour les graphiques (placeholder pour l'instant)
-  const mockCpuData = Array.from({ length: 20 }, (_, i) => ({
-    time: `${i}:00`,
-    value: Math.random() * 100,
-  }));
+  // Générer données graphiques depuis les serveurs (dernières métriques)
+  const [cpuHistory, setCpuHistory] = useState([]);
+  const [ramHistory, setRamHistory] = useState([]);
+
+  useEffect(() => {
+    if (servers.length > 0 && servers[0].metrics) {
+      const now = new Date();
+      const newCpuPoint = {
+        time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        value: servers[0].metrics.cpu?.usage || 0
+      };
+      const newRamPoint = {
+        time: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        value: servers[0].metrics.ram?.percent || 0
+      };
+
+      setCpuHistory(prev => [...prev.slice(-19), newCpuPoint]);
+      setRamHistory(prev => [...prev.slice(-19), newRamPoint]);
+    }
+  }, [servers]);
 
   // Calculer les stats depuis les vraies données
   const activeServers = servers.filter(s => s.status === 'online').length;
@@ -142,7 +157,7 @@ const Dashboard = () => {
             <span className="text-sm text-slate-500">Dernières 20 min</span>
           </div>
           <ResponsiveContainer width="100%" height={250}>
-            <AreaChart data={mockCpuData}>
+            <AreaChart data={cpuHistory.length > 0 ? cpuHistory : [{ time: '00:00', value: 0 }]}>
               <defs>
                 <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
@@ -183,7 +198,7 @@ const Dashboard = () => {
             <span className="text-sm text-slate-500">Dernières 20 min</span>
           </div>
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={mockCpuData}>
+            <LineChart data={ramHistory.length > 0 ? ramHistory : [{ time: '00:00', value: 0 }]}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
               <YAxis stroke="#64748b" fontSize={12} />
