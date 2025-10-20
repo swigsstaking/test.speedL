@@ -222,7 +222,6 @@ const Settings = () => {
                   alt="Logo preview"
                   className="max-w-xs max-h-32 object-contain bg-white p-4 rounded-lg border-2 border-dark-700"
                   onError={(e) => {
-                    console.error('Erreur de chargement du logo:', logoPreview);
                     e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="red">Erreur</text></svg>';
                   }}
                 />
@@ -295,7 +294,6 @@ const Settings = () => {
                   alt="Favicon preview"
                   className="w-16 h-16 object-contain bg-white p-2 rounded-lg border-2 border-dark-700"
                   onError={(e) => {
-                    console.error('Erreur de chargement du favicon:', faviconPreview);
                     e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="red">Erreur</text></svg>';
                   }}
                 />

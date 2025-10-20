@@ -17,7 +17,7 @@ export const useSiteInfo = () => {
           setSiteInfo(speedLSite);
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des infos du site:', error);
+        // Silently handle error - use default site info
       } finally {
         setLoading(false);
       }

@@ -26,7 +26,7 @@ const Login = () => {
       await login({ email, password });
       navigate('/');
     } catch (error) {
-      console.error('Login error:', error);
+      // Error already handled by AuthContext with toast
     } finally {
       setLoading(false);
     }

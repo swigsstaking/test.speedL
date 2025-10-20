@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
         const response = await authAPI.getMe();
         setUser(response.data);
       } catch (error) {
-        console.error('Auth check failed:', error);
+        // Auth check failed silently - user will be redirected to login
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
@@ -50,7 +50,6 @@ export const AuthProvider = ({ children }) => {
       toast.success('Connexion réussie !');
       return response;
     } catch (error) {
-      console.error('Login error:', error);
       toast.error(error.message || 'Erreur de connexion');
       throw error;
     }

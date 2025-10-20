@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import dotenv from 'dotenv';
+import logger from './src/utils/logger.js';
 import rateLimit from 'express-rate-limit';
 
 // Import routes
@@ -72,11 +73,13 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error('Server error:', err.message);
+  if (process.env.NODE_ENV !== 'production') {
+    logger.debug(err.stack);
+  }
   res.status(err.status || 500).json({
     success: false,
     message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
 
@@ -92,23 +95,23 @@ app.use((req, res) => {
 mongoose
   .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/swigs-cms')
   .then(() => {
-    console.log('✅ Connected to MongoDB');
+    logger.success('Connected to MongoDB');
     
     // Start server
     app.listen(PORT, () => {
-      console.log(`🚀 SWIGS CMS API running on port ${PORT}`);
-      console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 API: http://localhost:${PORT}/api`);
+      logger.success(`SWIGS CMS API running on port ${PORT}`);
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`API: http://localhost:${PORT}/api`);
     });
   })
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
+    logger.error('MongoDB connection error:', err.message);
     process.exit(1);
   });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
+  logger.info('SIGTERM signal received: closing HTTP server');
   mongoose.connection.close();
   process.exit(0);
 });

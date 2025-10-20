@@ -1,16 +1,26 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { SiteProvider } from './context/SiteContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Courses from './pages/Courses';
-import SEO from './pages/SEO';
-import Analytics from './pages/Analytics';
-import Media from './pages/Media';
-import Settings from './pages/Settings';
+
+// Lazy load pages for better performance
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Courses = lazy(() => import('./pages/Courses'));
+const SEO = lazy(() => import('./pages/SEO'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Media = lazy(() => import('./pages/Media'));
+const Settings = lazy(() => import('./pages/Settings'));
+
+// Loading component
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen bg-dark-950">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+  </div>
+);
 
 function App() {
   return (
@@ -41,27 +51,29 @@ function App() {
           }}
         />
         
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Dashboard />} />
-            <Route path="courses" element={<Courses />} />
-            <Route path="seo" element={<SEO />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="media" element={<Media />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Dashboard />} />
+              <Route path="courses" element={<Courses />} />
+              <Route path="seo" element={<SEO />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="media" element={<Media />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
         </SiteProvider>
       </AuthProvider>
     </Router>

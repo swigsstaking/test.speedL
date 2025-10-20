@@ -46,7 +46,7 @@ export const SiteProvider = ({ children }) => {
         localStorage.setItem('currentSiteId', response.data[0]._id);
       }
     } catch (error) {
-      console.error('Error loading sites:', error);
+      // Error silently handled - user will see empty state
     } finally {
       setLoading(false);
     }

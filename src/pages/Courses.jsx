@@ -31,8 +31,7 @@ const Courses = () => {
           setCourses(coursesData.data || [])
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des cours:', error)
-        // Garder les cours par défaut en cas d'erreur
+        // Silently handle error - keep default courses
         setCourses([])
       } finally {
         setLoading(false)
