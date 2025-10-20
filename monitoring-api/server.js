@@ -64,7 +64,7 @@ const MetricSchema = new mongoose.Schema({
 // TTL Index: Supprime automatiquement les métriques > 30 jours
 MetricSchema.index({ timestamp: 1 }, { expireAfterSeconds: 2592000 });
 
-const Server = mongoose.model('Server', ServerSchema);
+const ServerModel = mongoose.model('Server', ServerSchema);
 const Metric = mongoose.model('Metric', MetricSchema);
 
 // Store connected agents
@@ -103,7 +103,7 @@ app.post('/api/metrics', async (req, res) => {
     await metric.save();
 
     // Mettre à jour serveur
-    await Server.findOneAndUpdate(
+    await ServerModel.findOneAndUpdate(
       { serverId },
       { 
         serverId,
@@ -126,7 +126,7 @@ app.post('/api/metrics', async (req, res) => {
 // Liste des serveurs
 app.get('/api/servers', async (req, res) => {
   try {
-    const servers = await Server.find();
+    const servers = await ServerModel.find();
     
     // Récupérer dernières métriques pour chaque serveur
     const serversWithMetrics = await Promise.all(
@@ -155,7 +155,7 @@ app.get('/api/servers/:serverId', async (req, res) => {
     const { serverId } = req.params;
     const { period = '24h' } = req.query;
 
-    const server = await Server.findOne({ serverId });
+    const server = await ServerModel.findOne({ serverId });
     if (!server) {
       return res.status(404).json({ success: false, message: 'Serveur non trouvé' });
     }
@@ -216,7 +216,7 @@ app.get('/api/sites', async (req, res) => {
 setInterval(async () => {
   try {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    await Server.updateMany(
+    await ServerModel.updateMany(
       { lastSeen: { $lt: fiveMinutesAgo } },
       { status: 'offline' }
     );
