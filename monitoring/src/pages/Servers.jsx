@@ -15,13 +15,13 @@ const Servers = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-slate-900">Serveurs</h2>
-        <p className="text-slate-500 mt-1">Monitoring détaillé de vos serveurs</p>
+        <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Serveurs</h2>
+        <p className="text-slate-500 dark:text-slate-400 mt-1">Monitoring détaillé de vos serveurs</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
         {servers.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
+          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
             Aucun serveur connecté
           </div>
         ) : (
@@ -51,8 +51,8 @@ const Servers = () => {
                       }`} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-slate-900">{server.name || server.serverId}</h3>
-                      <p className="text-sm text-slate-500 mt-1">{server.ip} • {server.location}</p>
+                      <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{server.name || server.serverId}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{server.ip} • {server.location}</p>
                     </div>
                   </div>
                   <span className={`status-badge ${
@@ -65,13 +65,13 @@ const Servers = () => {
             {/* Metrics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* CPU */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2 mb-3">
                   <Cpu className="w-4 h-4 text-primary-600" />
-                  <span className="text-sm font-medium text-slate-700">CPU</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">CPU</span>
                 </div>
-                <div className="text-2xl font-bold text-slate-900 mb-2">{(cpu.usage || 0).toFixed(1)}%</div>
-                <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{(cpu.usage || 0).toFixed(1)}%</div>
+                <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2">
                   <div 
                     className={`h-2 rounded-full transition-all duration-500 ${
                       (cpu.usage || 0) > 80 ? 'bg-red-500' : 
@@ -80,17 +80,17 @@ const Servers = () => {
                     style={{ width: `${cpu.usage || 0}%` }}
                   ></div>
                 </div>
-                <p className="text-xs text-slate-500">{cpu.cores || 0} cœurs</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{cpu.cores || 0} cœurs</p>
               </div>
 
               {/* RAM */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2 mb-3">
                   <Activity className="w-4 h-4 text-primary-600" />
-                  <span className="text-sm font-medium text-slate-700">RAM</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">RAM</span>
                 </div>
-                <div className="text-2xl font-bold text-slate-900 mb-2">{(ram.percent || 0).toFixed(1)}%</div>
-                <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{(ram.percent || 0).toFixed(1)}%</div>
+                <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2">
                   <div 
                     className={`h-2 rounded-full transition-all duration-500 ${
                       (ram.percent || 0) > 80 ? 'bg-red-500' : 
@@ -99,17 +99,17 @@ const Servers = () => {
                     style={{ width: `${ram.percent || 0}%` }}
                   ></div>
                 </div>
-                <p className="text-xs text-slate-500">{((ram.used || 0) / 1024 / 1024 / 1024).toFixed(1)}GB / {((ram.total || 0) / 1024 / 1024 / 1024).toFixed(1)}GB</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{((ram.used || 0) / 1024 / 1024 / 1024).toFixed(1)}GB / {((ram.total || 0) / 1024 / 1024 / 1024).toFixed(1)}GB</p>
               </div>
 
               {/* Disk */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2 mb-3">
                   <HardDrive className="w-4 h-4 text-primary-600" />
-                  <span className="text-sm font-medium text-slate-700">Disque</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Disque</span>
                 </div>
-                <div className="text-2xl font-bold text-slate-900 mb-2">{(disk.percent || 0).toFixed(1)}%</div>
-                <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">{(disk.percent || 0).toFixed(1)}%</div>
+                <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mb-2">
                   <div 
                     className={`h-2 rounded-full transition-all duration-500 ${
                       (disk.percent || 0) > 80 ? 'bg-red-500' : 
@@ -118,29 +118,29 @@ const Servers = () => {
                     style={{ width: `${disk.percent || 0}%` }}
                   ></div>
                 </div>
-                <p className="text-xs text-slate-500">{((disk.used || 0) / 1024 / 1024 / 1024).toFixed(1)}GB / {((disk.total || 0) / 1024 / 1024 / 1024).toFixed(1)}GB</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{((disk.used || 0) / 1024 / 1024 / 1024).toFixed(1)}GB / {((disk.total || 0) / 1024 / 1024 / 1024).toFixed(1)}GB</p>
               </div>
 
               {/* Network */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2 mb-3">
                   <Wifi className="w-4 h-4 text-primary-600" />
-                  <span className="text-sm font-medium text-slate-700">Réseau</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Réseau</span>
                 </div>
                 <div className="space-y-2">
                   <div>
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                       <span>↓ Download</span>
-                      <span className="font-medium text-slate-900">{((network.rx || 0) / 1024 / 1024).toFixed(2)} MB/s</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{((network.rx || 0) / 1024 / 1024).toFixed(2)} MB/s</span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-1.5">
                       <div className="h-1.5 rounded-full bg-primary-500" style={{ width: '60%' }}></div>
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                       <span>↑ Upload</span>
-                      <span className="font-medium text-slate-900">{((network.tx || 0) / 1024 / 1024).toFixed(2)} MB/s</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{((network.tx || 0) / 1024 / 1024).toFixed(2)} MB/s</span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-1.5">
                       <div className="h-1.5 rounded-full bg-emerald-500" style={{ width: '40%' }}></div>
@@ -152,9 +152,9 @@ const Servers = () => {
 
             {/* Footer */}
             <div className="mt-6 pt-6 border-t border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-slate-500">
+              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <Clock className="w-4 h-4" />
-                <span>Uptime: <span className="font-medium text-slate-900">En ligne</span></span>
+                <span>Uptime: <span className="font-medium text-slate-900 dark:text-slate-100">En ligne</span></span>
               </div>
               <button className="btn-secondary text-sm">
                 Voir détails

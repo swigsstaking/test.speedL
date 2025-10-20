@@ -22,11 +22,11 @@ const Sites = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900">Sites Web</h2>
-          <p className="text-slate-500 mt-1">Monitoring et performance de vos sites</p>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Sites Web</h2>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Monitoring et performance de vos sites</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-600">
+          <span className="text-sm text-slate-600 dark:text-slate-300">
             {sites.filter(s => s.status === 'online').length} / {sites.length} en ligne
           </span>
         </div>
@@ -52,7 +52,7 @@ const Sites = () => {
                   }`} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-slate-900">{site.name}</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{site.name}</h3>
                   <a 
                     href={site.url} 
                     target="_blank" 
@@ -77,7 +77,7 @@ const Sites = () => {
             {/* Metrics Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {/* Latency */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2 mb-2">
                   <Wifi className="w-4 h-4 text-slate-500" />
                   <span className="text-xs font-medium text-slate-600">Latence</span>
@@ -92,7 +92,7 @@ const Sites = () => {
               </div>
 
               {/* Uptime */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-4 h-4 text-slate-500" />
                   <span className="text-xs font-medium text-slate-600">Uptime</span>
@@ -106,21 +106,21 @@ const Sites = () => {
               </div>
 
               {/* Requests */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2 mb-2">
                   <Clock className="w-4 h-4 text-slate-500" />
-                  <span className="text-xs font-medium text-slate-600">Requêtes/24h</span>
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Requêtes/24h</span>
                 </div>
-                <div className="text-2xl font-bold text-slate-900">
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
                   {(site.requests / 1000).toFixed(0)}k
                 </div>
               </div>
 
               {/* Errors */}
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertCircle className="w-4 h-4 text-slate-500" />
-                  <span className="text-xs font-medium text-slate-600">Erreurs/24h</span>
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Erreurs/24h</span>
                 </div>
                 <div className={`text-2xl font-bold ${
                   site.errors < 10 ? 'text-emerald-600' : 
@@ -134,8 +134,8 @@ const Sites = () => {
             {/* Performance Chart */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-slate-700">Performance (10 dernières minutes)</span>
-                <span className="text-xs text-slate-500">Latence moyenne</span>
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Performance (10 dernières minutes)</span>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Latence moyenne</p>
               </div>
               <ResponsiveContainer width="100%" height={60}>
                 <LineChart data={site.sparkline.map((v, i) => ({ value: v }))}>
@@ -151,7 +151,7 @@ const Sites = () => {
             </div>
 
             {/* Footer */}
-            <div className="pt-6 border-t border-slate-200 flex items-center justify-between">
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-600 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className={`flex items-center gap-2 text-sm ${
                   site.ssl.valid ? 'text-emerald-600' : 'text-red-600'
@@ -163,9 +163,7 @@ const Sites = () => {
                   )}
                 </div>
                 {site.ssl.valid && (
-                  <span className="text-sm text-slate-500">
-                    Expire dans {site.ssl.expiresIn} jours
-                  </span>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{site.url}</p>
                 )}
               </div>
               <button className="btn-secondary text-sm">

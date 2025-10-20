@@ -215,15 +215,19 @@ app.get('/api/sites', async (req, res) => {
     // Essayer de récupérer depuis le backend principal
     try {
       const backendResponse = await axios.get('http://localhost:3000/api/sites', { timeout: 3000 });
+      console.log('📡 Backend response:', JSON.stringify(backendResponse.data, null, 2));
+      
       if (backendResponse.data?.data?.length > 0) {
         sitesToCheck = backendResponse.data.data.map(s => ({
           slug: s.slug,
-          name: s.name || s.slug
+          name: s.name || s.slug,
+          domain: s.domain // Récupérer le domaine si disponible
         }));
-        console.log(`✅ ${sitesToCheck.length} sites récupérés depuis backend`);
+        console.log(`✅ ${sitesToCheck.length} sites récupérés depuis backend:`, sitesToCheck);
       }
     } catch (backendError) {
-      console.log('⚠️ Backend principal non accessible, utilisation sites par défaut');
+      console.log('⚠️ Backend principal non accessible:', backendError.message);
+      console.log('⚠️ Utilisation sites par défaut');
     }
     
     // Vérifier l'uptime et SSL de chaque site
