@@ -231,7 +231,9 @@ app.get('/api/sites', async (req, res) => {
     
     const sitesWithStatus = await Promise.all(
       sitesToCheck.map(async (site) => {
-        const url = `https://${site.slug}.swigs.online`;
+        // Construire l'URL correctement (gérer les tirets)
+        const domain = site.domain || `${site.slug}.swigs.online`;
+        const url = `https://${domain}`;
         
         try {
           const [uptimeCheck, sslCheck] = await Promise.all([
@@ -243,7 +245,7 @@ app.get('/api/sites', async (req, res) => {
           
           return {
             id: site.slug,
-            name: `${site.slug}.swigs.online`,
+            name: domain,
             url,
             status: uptimeCheck.status,
             latency: uptimeCheck.latency,
@@ -254,7 +256,7 @@ app.get('/api/sites', async (req, res) => {
           console.error(`❌ Erreur vérification ${site.slug}:`, error.message);
           return {
             id: site.slug,
-            name: `${site.slug}.swigs.online`,
+            name: domain,
             url,
             status: 'error',
             latency: 0,

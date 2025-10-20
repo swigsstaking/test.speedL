@@ -1,46 +1,22 @@
 import { Globe, TrendingUp, Wifi, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { useQuery } from '@tanstack/react-query';
+import { monitoringApi } from '../services/api';
 
 const Sites = () => {
-  const sites = [
-    {
-      id: 1,
-      name: 'speedl.swigs.online',
-      url: 'https://speedl.swigs.online',
-      status: 'online',
-      latency: 45,
-      uptime: 99.9,
-      requests: 125000,
-      errors: 12,
-      ssl: { valid: true, expiresIn: 89 },
-      sparkline: [45, 52, 48, 55, 49, 47, 51, 46, 48, 45],
-    },
-    {
-      id: 2,
-      name: 'admin.swigs.online',
-      url: 'https://admin.swigs.online',
-      status: 'online',
-      latency: 32,
-      uptime: 100,
-      requests: 45000,
-      errors: 3,
-      ssl: { valid: true, expiresIn: 89 },
-      sparkline: [32, 35, 31, 38, 33, 30, 34, 32, 33, 32],
-    },
-    {
-      id: 3,
-      name: 'autre-site.com',
-      url: 'https://autre-site.com',
-      status: 'offline',
-      latency: 0,
-      uptime: 0,
-      requests: 0,
-      errors: 1250,
-      ssl: { valid: false, expiresIn: -5 },
-      sparkline: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    },
-  ];
+  const { data: sitesData } = useQuery({
+    queryKey: ['sites'],
+    queryFn: monitoringApi.getSites,
+    refetchInterval: 30000, // Refresh toutes les 30s
+  });
+
+  const sites = (sitesData?.data || []).map(site => ({
+    ...site,
+    requests: 125000, // TODO: À récupérer depuis analytics
+    errors: site.status === 'online' ? 12 : 1250,
+    sparkline: Array.from({ length: 10 }, () => site.latency + Math.random() * 10 - 5),
+  }));
 
   return (
     <div className="space-y-6">
