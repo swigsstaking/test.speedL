@@ -2,13 +2,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 /**
  * Graphique avec ligne qui change de couleur selon le seuil
- * @param {Array} data - Données du graphique
- * @param {string} dataKey - Clé des données
- * @param {number} warningThreshold - Seuil d'avertissement (orange)
- * @param {number} dangerThreshold - Seuil de danger (rouge)
- * @param {string} normalColor - Couleur normale (par défaut vert)
- * @param {string} warningColor - Couleur avertissement (par défaut orange)
- * @param {string} dangerColor - Couleur danger (par défaut rouge)
  */
 const DynamicLineChart = ({ 
   data, 
@@ -22,30 +15,30 @@ const DynamicLineChart = ({
   unit = '%',
   height = 300
 }) => {
-  // Créer des segments avec couleurs différentes
-  const segments = [];
-  
-  for (let i = 0; i < data.length - 1; i++) {
-    const current = data[i];
-    const next = data[i + 1];
-    const value = current[dataKey];
-    
-    let color = normalColor;
-    if (value >= dangerThreshold) {
-      color = dangerColor;
-    } else if (value >= warningThreshold) {
-      color = warningColor;
-    }
-    
-    segments.push({
-      data: [current, next],
-      color
-    });
-  }
+  // Fonction pour déterminer la couleur selon la valeur
+  const getColor = (value) => {
+    if (value >= dangerThreshold) return dangerColor;
+    if (value >= warningThreshold) return warningColor;
+    return normalColor;
+  };
+
+  // Enrichir les données avec la couleur
+  const enrichedData = data.map(point => ({
+    ...point,
+    color: getColor(point[dataKey])
+  }));
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data}>
+      <LineChart data={enrichedData}>
+        <defs>
+          {/* Gradient pour la ligne */}
+          <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={normalColor} stopOpacity={0.8}/>
+            <stop offset="100%" stopColor={normalColor} stopOpacity={0.1}/>
+          </linearGradient>
+        </defs>
+        
         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
         <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
         <YAxis stroke="#64748b" fontSize={12} domain={yDomain} />
@@ -55,7 +48,8 @@ const DynamicLineChart = ({
             border: '1px solid #e2e8f0',
             borderRadius: '8px',
           }}
-          formatter={(value) => `${value.toFixed(1)}${unit}`}
+          formatter={(value) => [`${value.toFixed(1)}${unit}`, dataKey === 'latency' ? 'Latence' : 'Valeur']}
+          labelStyle={{ fontWeight: 'bold' }}
         />
         
         {/* Lignes de référence pour les seuils */}
@@ -64,27 +58,39 @@ const DynamicLineChart = ({
           stroke={warningColor} 
           strokeDasharray="3 3" 
           strokeOpacity={0.3}
+          label={{ value: `${warningThreshold}${unit}`, position: 'right', fill: warningColor, fontSize: 10 }}
         />
         <ReferenceLine 
           y={dangerThreshold} 
           stroke={dangerColor} 
           strokeDasharray="3 3" 
           strokeOpacity={0.3}
+          label={{ value: `${dangerThreshold}${unit}`, position: 'right', fill: dangerColor, fontSize: 10 }}
         />
         
-        {/* Dessiner chaque segment avec sa couleur */}
-        {segments.map((segment, index) => (
-          <Line
-            key={index}
-            data={segment.data}
-            type="monotone"
-            dataKey={dataKey}
-            stroke={segment.color}
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-          />
-        ))}
+        {/* Une seule ligne avec couleur dynamique via stroke */}
+        <Line
+          type="monotone"
+          dataKey={dataKey}
+          stroke={normalColor}
+          strokeWidth={2}
+          dot={(props) => {
+            const { cx, cy, payload } = props;
+            const color = getColor(payload[dataKey]);
+            return (
+              <circle 
+                cx={cx} 
+                cy={cy} 
+                r={3} 
+                fill={color}
+                stroke={color}
+                strokeWidth={2}
+              />
+            );
+          }}
+          activeDot={{ r: 6 }}
+          isAnimationActive={true}
+        />
       </LineChart>
     </ResponsiveContainer>
   );

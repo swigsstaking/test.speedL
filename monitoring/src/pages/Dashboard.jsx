@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Server, Globe, Activity, TrendingUp, Cpu, HardDrive, Wifi, AlertCircle } from 'lucide-react';
+import { Server, Globe, Activity, TrendingUp, Cpu, HardDrive, Wifi, AlertCircle, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { monitoringApi } from '../services/api';
@@ -318,7 +318,8 @@ const Dashboard = () => {
                             site.ssl.expiresIn > 30 ? 'text-emerald-600' : 
                             site.ssl.expiresIn > 7 ? 'text-amber-600' : 'text-red-600'
                           }`}>
-                            🔒 SSL {site.ssl.expiresIn}j
+                            <Lock className="w-3 h-3" />
+                            SSL {site.ssl.expiresIn}j
                           </span>
                         )}
                       </div>
