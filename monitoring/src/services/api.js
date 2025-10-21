@@ -93,6 +93,21 @@ export const monitoringApi = {
     return response.data;
   },
 
+  getMonthlyHistory: async (months = 12) => {
+    const response = await api.get(`/analytics/monthly-history?months=${months}`);
+    return response.data;
+  },
+
+  getServerProfitability: async () => {
+    const response = await api.get('/analytics/server-profitability');
+    return response.data;
+  },
+
+  calculateMonthly: async () => {
+    const response = await api.post('/analytics/calculate-monthly');
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');

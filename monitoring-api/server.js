@@ -742,11 +742,11 @@ app.get('/api/sites/:siteId/pricing', async (req, res) => {
   }
 });
 
-// Mettre à jour pricing site
+// Mettre à jour pricing d'un site
 app.put('/api/sites/:siteId/pricing', async (req, res) => {
   try {
     const { siteId } = req.params;
-    const { actualPrice, monthlyCost, suggestedBreakdown } = req.body;
+    const { actualPrice, monthlyCost, suggestedBreakdown, serverId } = req.body;
     
     let pricing = await SitePricing.findOne({ siteId });
     
@@ -757,6 +757,7 @@ app.put('/api/sites/:siteId/pricing', async (req, res) => {
     if (actualPrice !== undefined) pricing.actualPrice = actualPrice;
     if (monthlyCost !== undefined) pricing.monthlyCost = monthlyCost;
     if (suggestedBreakdown) pricing.suggestedBreakdown = suggestedBreakdown;
+    if (serverId !== undefined) pricing.serverId = serverId;
     
     await pricing.save();
     
@@ -774,6 +775,10 @@ app.get('/api/analytics/financial', async (req, res) => {
     const { updateAllSuggestedPrices } = await import('./src/services/pricing.service.js');
     await updateAllSuggestedPrices({ period: '30d', marginPercent: 20 });
     
+    // Calculer et sauvegarder stats mensuelles
+    const { calculateCurrentMonth } = await import('./src/services/monthly-financial.service.js');
+    await calculateCurrentMonth();
+    
     // Récupérer tous les coûts serveurs
     const serverCosts = await ServerCost.find();
     const totalServerCosts = serverCosts.reduce((sum, s) => sum + s.totalMonthly, 0);
@@ -788,6 +793,24 @@ app.get('/api/analytics/financial', async (req, res) => {
     // Calculer marge globale
     const globalMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0;
     
+    // Calculer rentabilité par serveur
+    const serverProfitability = serverCosts.map(server => {
+      const sitesOnServer = sitePricings.filter(s => s.serverId === server.serverId);
+      const serverRevenue = sitesOnServer.reduce((sum, s) => sum + s.actualPrice, 0);
+      const serverProfit = serverRevenue - server.totalMonthly;
+      const serverMargin = serverRevenue > 0 ? ((serverProfit / serverRevenue) * 100) : 0;
+      
+      return {
+        serverId: server.serverId,
+        cost: server.totalMonthly,
+        revenue: serverRevenue,
+        profit: serverProfit,
+        margin: parseFloat(serverMargin.toFixed(2)),
+        siteCount: sitesOnServer.length,
+        ...server.toObject()
+      };
+    });
+    
     res.json({
       success: true,
       data: {
@@ -795,7 +818,8 @@ app.get('/api/analytics/financial', async (req, res) => {
           count: serverCosts.length,
           totalMonthlyCost: totalServerCosts,
           totalYearlyCost: totalServerCosts * 12,
-          details: serverCosts
+          details: serverCosts,
+          profitability: serverProfitability
         },
         sites: {
           count: sitePricings.length,
@@ -838,6 +862,59 @@ app.post('/api/analytics/recalculate-prices', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Erreur recalcul prix suggérés:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Historique mensuel financier
+app.get('/api/analytics/monthly-history', async (req, res) => {
+  try {
+    const { months = 12 } = req.query;
+    const { getMonthlyHistory } = await import('./src/services/monthly-financial.service.js');
+    
+    const history = await getMonthlyHistory(parseInt(months));
+    
+    res.json({
+      success: true,
+      data: history
+    });
+  } catch (error) {
+    console.error('❌ Erreur récupération historique mensuel:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Rentabilité par serveur
+app.get('/api/analytics/server-profitability', async (req, res) => {
+  try {
+    const { getServerProfitability } = await import('./src/services/monthly-financial.service.js');
+    
+    const profitability = await getServerProfitability();
+    
+    res.json({
+      success: true,
+      data: profitability
+    });
+  } catch (error) {
+    console.error('❌ Erreur rentabilité serveurs:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Calculer stats mois en cours
+app.post('/api/analytics/calculate-monthly', async (req, res) => {
+  try {
+    const { calculateCurrentMonth } = await import('./src/services/monthly-financial.service.js');
+    
+    const monthlyData = await calculateCurrentMonth();
+    
+    res.json({
+      success: true,
+      data: monthlyData,
+      message: 'Stats mensuelles calculées'
+    });
+  } catch (error) {
+    console.error('❌ Erreur calcul stats mensuelles:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

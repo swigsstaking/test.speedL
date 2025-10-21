@@ -7,6 +7,13 @@ const SitePricingSchema = new mongoose.Schema({
     unique: true,
     index: true
   },
+  // Attribution serveur
+  serverId: {
+    type: String,
+    default: 'server-1',
+    index: true,
+    comment: 'Serveur hébergeant ce site'
+  },
   // Prix suggéré (calculé automatiquement)
   suggestedPrice: {
     type: Number,

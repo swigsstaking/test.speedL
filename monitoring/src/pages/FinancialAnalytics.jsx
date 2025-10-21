@@ -24,10 +24,19 @@ const FinancialAnalytics = () => {
     refetchInterval: 30000,
   });
 
+  // Récupérer historique mensuel
+  const { data: monthlyHistoryData } = useQuery({
+    queryKey: ['monthly-history'],
+    queryFn: () => monitoringApi.getMonthlyHistory(12),
+    refetchInterval: 300000, // 5 minutes
+  });
+
   const financial = financialData?.data || {};
   const summary = financial.summary || {};
   const serverCosts = financial.servers?.details || [];
+  const serverProfitability = financial.servers?.profitability || [];
   const sites = financial.sites?.details || [];
+  const monthlyHistory = monthlyHistoryData?.data || [];
 
   // Fusionner serveurs avec leurs coûts
   const allServers = (serversData?.data || []).map(server => {
@@ -70,14 +79,13 @@ const FinancialAnalytics = () => {
     },
   });
 
-  // Données pour graphiques
-  const revenueVsCostData = [
-    { name: 'Revenus', value: summary.monthlyRevenue || 0, color: '#10b981' },
-    { name: 'Coûts', value: summary.monthlyCosts || 0, color: '#ef4444' },
-    { name: 'Profit', value: summary.monthlyProfit || 0, color: '#3b82f6' },
-  ];
-
-  const COLORS = ['#10b981', '#ef4444', '#3b82f6'];
+  // Données pour graphique évolution mensuelle
+  const monthlyChartData = monthlyHistory.map(m => ({
+    name: `${m.month}/${m.year}`,
+    Revenus: m.totalRevenue || 0,
+    Coûts: m.totalCosts || 0,
+    Profit: m.totalProfit || 0,
+  }));
 
   if (isLoading) {
     return <div className="text-center py-12">Chargement...</div>;
@@ -219,16 +227,16 @@ const FinancialAnalytics = () => {
 
       {/* Graphiques */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Bar Chart */}
+        {/* Évolution Mensuelle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="card"
         >
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Revenus vs Coûts</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Évolution Mensuelle (12 mois)</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={revenueVsCostData}>
+            <LineChart data={monthlyChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" stroke="#64748b" />
               <YAxis stroke="#64748b" />
@@ -241,42 +249,76 @@ const FinancialAnalytics = () => {
                 }}
                 formatter={(value) => `${value.toFixed(2)} CHF`}
               />
-              <Bar dataKey="value" fill="#3b82f6">
-                {revenueVsCostData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
+              <Legend />
+              <Line type="monotone" dataKey="Revenus" stroke="#10b981" strokeWidth={2} />
+              <Line type="monotone" dataKey="Coûts" stroke="#ef4444" strokeWidth={2} />
+              <Line type="monotone" dataKey="Profit" stroke="#3b82f6" strokeWidth={2} />
+            </LineChart>
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Pie Chart */}
+        {/* Rentabilité par Serveur */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="card"
         >
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Répartition</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={revenueVsCostData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {revenueVsCostData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => `${value.toFixed(2)} CHF`} />
-            </PieChart>
-          </ResponsiveContainer>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Rentabilité par Serveur</h3>
+          <div className="space-y-3">
+            {serverProfitability.length > 0 ? (
+              serverProfitability.map((server) => (
+                <div key={server.serverId} className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-slate-900 dark:text-slate-100">{server.serverId}</span>
+                    <span className={`text-sm font-bold ${
+                      server.profit >= 0 ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {server.profit >= 0 ? '+' : ''}{server.profit.toFixed(2)} CHF
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 dark:text-slate-400">
+                    <div>
+                      <span className="block">Revenus</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{server.revenue.toFixed(2)} CHF</span>
+                    </div>
+                    <div>
+                      <span className="block">Coûts</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{server.cost.toFixed(2)} CHF</span>
+                    </div>
+                    <div>
+                      <span className="block">Sites</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-100">{server.siteCount}</span>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-slate-600 dark:text-slate-400">Marge</span>
+                      <span className={`font-medium ${
+                        server.margin >= 30 ? 'text-emerald-600' :
+                        server.margin >= 15 ? 'text-amber-600' : 'text-red-600'
+                      }`}>
+                        {server.margin.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${
+                          server.margin >= 30 ? 'bg-emerald-600' :
+                          server.margin >= 15 ? 'bg-amber-600' : 'bg-red-600'
+                        }`}
+                        style={{ width: `${Math.min(Math.max(server.margin, 0), 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-8">
+                Aucune donnée de rentabilité disponible
+              </p>
+            )}
+          </div>
         </motion.div>
       </div>
 
@@ -354,6 +396,7 @@ const FinancialAnalytics = () => {
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700">
                 <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Site</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Serveur hébergeant ce site">Serveur</th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Prix calculé automatiquement selon ressources (Suisse)">Prix Suggéré</th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Prix facturé au client (CHF/mois)">Prix Réel</th>
                 <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Coût mensuel pour héberger ce site (part serveur + ressources)">Coût Site</th>
@@ -367,6 +410,7 @@ const FinancialAnalytics = () => {
                 <SitePricingRow
                   key={site.siteId}
                   site={site}
+                  allServers={allServers}
                   isEditing={editingSite === site.siteId}
                   onEdit={() => setEditingSite(site.siteId)}
                   onCancel={() => setEditingSite(null)}
@@ -482,10 +526,11 @@ const ServerCostRow = ({ server, isEditing, onEdit, onCancel, onSave }) => {
 };
 
 // Composant ligne site
-const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave }) => {
+const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave, allServers }) => {
   const [formData, setFormData] = useState({
     actualPrice: site.actualPrice || 0,
     monthlyCost: site.monthlyCost || 0,
+    serverId: site.serverId || 'server-1',
   });
   const [showBreakdown, setShowBreakdown] = useState(false);
 
@@ -493,6 +538,19 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave }) => {
     return (
       <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
         <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">{site.siteId}</td>
+        <td className="py-3 px-4">
+          <select
+            value={formData.serverId}
+            onChange={(e) => setFormData({ ...formData, serverId: e.target.value })}
+            className="w-full px-2 py-1 text-sm border rounded dark:bg-slate-800 dark:border-slate-600"
+          >
+            {allServers.map((server) => (
+              <option key={server.serverId} value={server.serverId}>
+                {server.serverId}
+              </option>
+            ))}
+          </select>
+        </td>
         <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-400">{site.suggestedPrice?.toFixed(2) || '0.00'}</td>
         <td className="py-3 px-4 text-right">
           <input
@@ -543,6 +601,7 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave }) => {
     <>
       <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30">
         <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">{site.siteId}</td>
+        <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{site.serverId || 'server-1'}</td>
         <td className="py-3 px-4 text-right">
           <div className="flex items-center justify-end gap-2">
             <span className="text-slate-600 dark:text-slate-400">{site.suggestedPrice?.toFixed(2) || '0.00'}</span>
@@ -578,7 +637,7 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave }) => {
       </tr>
       {showBreakdown && (
         <tr className="bg-slate-50 dark:bg-slate-700/30 border-b border-slate-200 dark:border-slate-700">
-          <td colSpan="7" className="py-3 px-4">
+          <td colSpan="8" className="py-3 px-4">
             <div className="text-sm">
               <div className="font-medium text-slate-700 dark:text-slate-300 mb-2">Détail du prix suggéré :</div>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
