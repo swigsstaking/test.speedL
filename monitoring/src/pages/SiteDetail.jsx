@@ -137,7 +137,7 @@ const SiteDetail = () => {
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
-                📱 Mobile
+                Mobile
               </button>
               <button
                 onClick={() => setPageSpeedStrategy('desktop')}
@@ -147,7 +147,7 @@ const SiteDetail = () => {
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
-                💻 Desktop
+                Desktop
               </button>
             </div>
             <button
@@ -224,7 +224,7 @@ const SiteDetail = () => {
           </div>
           
           <div className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-            Dernière mesure : {new Date(pageSpeed.timestamp).toLocaleString('fr-FR')} • {pageSpeed.strategy === 'mobile' ? '📱 Mobile' : '💻 Desktop'}
+            Dernière mesure : {new Date(pageSpeed.timestamp).toLocaleString('fr-FR')} • {pageSpeed.strategy === 'mobile' ? 'Mobile' : 'Desktop'}
           </div>
           </>
         ) : (

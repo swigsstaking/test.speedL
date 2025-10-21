@@ -76,6 +76,16 @@ const ServerDetail = () => {
     value: m.metrics?.disk?.[0]?.percent || 0
   })) || [];
 
+  const networkData = historyData?.data?.metrics?.map(m => ({
+    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
+    }),
+    rx: (m.metrics?.network?.rx || 0) / 1024 / 1024, // MB/s
+    tx: (m.metrics?.network?.tx || 0) / 1024 / 1024  // MB/s
+  })) || [];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -273,7 +283,7 @@ const ServerDetail = () => {
           />
         </motion.div>
 
-        {/* System Info */}
+        {/* Network Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -281,36 +291,43 @@ const ServerDetail = () => {
           className="card"
         >
           <div className="card-header">
-            <h3 className="card-title">Informations Système</h3>
+            <h3 className="card-title">Trafic Réseau</h3>
           </div>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-              <span className="text-sm text-slate-600 dark:text-slate-400">Status</span>
-              <span className={`font-medium ${
-                server.status === 'online' ? 'text-emerald-600' : 'text-red-600'
-              }`}>
-                {server.status === 'online' ? 'En ligne' : 'Hors ligne'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-              <span className="text-sm text-slate-600 dark:text-slate-400">Serveur ID</span>
-              <span className="font-medium text-slate-900 dark:text-slate-100">{server.serverId}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-              <span className="text-sm text-slate-600 dark:text-slate-400">Adresse IP</span>
-              <span className="font-medium text-slate-900 dark:text-slate-100">{server.ip || 'N/A'}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-              <span className="text-sm text-slate-600 dark:text-slate-400">Localisation</span>
-              <span className="font-medium text-slate-900 dark:text-slate-100">{server.location || 'N/A'}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-              <span className="text-sm text-slate-600 dark:text-slate-400">Dernière mise à jour</span>
-              <span className="font-medium text-slate-900 dark:text-slate-100">
-                {new Date(server.lastSeen).toLocaleString('fr-FR')}
-              </span>
-            </div>
-          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={networkData.length > 0 ? networkData : [{ time: '00:00', rx: 0, tx: 0 }]}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="time" stroke="#64748b" fontSize={12} />
+              <YAxis stroke="#64748b" fontSize={12} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'var(--tooltip-bg, #ffffff)', 
+                  border: '1px solid var(--tooltip-border, #e2e8f0)',
+                  borderRadius: '8px',
+                  color: 'var(--tooltip-text, #1e293b)'
+                }}
+                formatter={(value) => `${value.toFixed(2)} MB/s`}
+                labelStyle={{ color: 'var(--tooltip-text, #1e293b)' }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="rx" 
+                stroke="#10b981" 
+                strokeWidth={2}
+                name="↓ Download"
+                dot={false}
+                isAnimationActive={false}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="tx" 
+                stroke="#3b82f6" 
+                strokeWidth={2}
+                name="↑ Upload"
+                dot={false}
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </motion.div>
       </div>
     </div>
