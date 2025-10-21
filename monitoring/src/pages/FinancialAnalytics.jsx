@@ -4,6 +4,7 @@ import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X, Re
 import { motion } from 'framer-motion';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
 import { monitoringApi } from '../services/api';
+import OverlayBarChart from '../components/OverlayBarChart';
 
 const FinancialAnalytics = () => {
   const queryClient = useQueryClient();
@@ -323,36 +324,10 @@ const FinancialAnalytics = () => {
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
             Évolution Mensuelle (12 mois)
             <span className="ml-3 text-sm font-normal text-slate-500 dark:text-slate-400">
-              Bordure pointillée = Projection | Barre pleine = Payé
+              Barres rayées = Projection | Barres pleines = Payé (superposées)
             </span>
           </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyChartData} barGap={2} barCategoryGap="15%">
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" stroke="#64748b" />
-              <YAxis stroke="#64748b" />
-              <Tooltip
-                cursor={false}
-                contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}
-                formatter={(value, name) => [`${value.toFixed(2)} CHF`, name]}
-              />
-              <Legend />
-              
-              {/* Barres avec bordure pour projection */}
-              <Bar dataKey="Revenus (Projection)" fill="rgba(16, 185, 129, 0.15)" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Revenus (Payé)" fill="#10b981" radius={[4, 4, 0, 0]} />
-              
-              <Bar dataKey="Coûts" fill="#ef4444" radius={[4, 4, 0, 0]} />
-              
-              <Bar dataKey="Profit (Projection)" fill="rgba(59, 130, 246, 0.15)" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Profit (Réel)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <OverlayBarChart data={monthlyChartData} height={300} />
         </motion.div>
 
         {/* Rentabilité par Serveur */}
