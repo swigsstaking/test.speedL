@@ -103,28 +103,29 @@ const SiteDetail = () => {
       </div>
 
       {/* PageSpeed Performance */}
-      {pageSpeed && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card"
-        >
-          <div className="card-header">
-            <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-500" />
-              <h3 className="card-title">Performance Réelle (PageSpeed)</h3>
-            </div>
-            <button
-              onClick={() => measurePageSpeedMutation.mutate('mobile')}
-              disabled={measurePageSpeedMutation.isPending}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${measurePageSpeedMutation.isPending ? 'animate-spin' : ''}`} />
-              {measurePageSpeedMutation.isPending ? 'Mesure...' : 'Mesurer'}
-            </button>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="card"
+      >
+        <div className="card-header">
+          <div className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-500" />
+            <h3 className="card-title">Performance Réelle (PageSpeed)</h3>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <button
+            onClick={() => measurePageSpeedMutation.mutate('mobile')}
+            disabled={measurePageSpeedMutation.isPending}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${measurePageSpeedMutation.isPending ? 'animate-spin' : ''}`} />
+            {measurePageSpeedMutation.isPending ? 'Mesure en cours...' : 'Mesurer'}
+          </button>
+        </div>
+        
+        {pageSpeed ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {/* Score Global */}
             <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
               <div className={`text-4xl font-bold ${
@@ -184,8 +185,19 @@ const SiteDetail = () => {
           <div className="mt-4 text-xs text-slate-500 dark:text-slate-400">
             Dernière mesure : {new Date(pageSpeed.timestamp).toLocaleString('fr-FR')} • Mobile
           </div>
-        </motion.div>
-      )}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <Zap className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
+              Aucune mesure disponible. Cliquez sur "Mesurer" pour analyser les performances réelles de ce site.
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              La mesure prend environ 30 secondes et utilise Google PageSpeed Insights.
+            </p>
+          </div>
+        )}
+      </motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
