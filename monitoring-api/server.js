@@ -4,9 +4,11 @@ import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import ServerMetric from './src/models/ServerMetric.js';
 import SiteMetric from './src/models/SiteMetric.js';
+import ServerMetric from './src/models/ServerMetric.js';
 import PageSpeedMetric from './src/models/PageSpeedMetric.js';
+import ServerCost from './src/models/ServerCost.js';
+import SitePricing from './src/models/SitePricing.js';
 
 dotenv.config();
 
@@ -655,6 +657,143 @@ mongoose
     console.error('❌ Erreur connexion MongoDB:', err);
     process.exit(1);
   });
+
+// ==================== ROUTES FINANCIÈRES ====================
+
+// Récupérer coûts serveur
+app.get('/api/servers/:serverId/cost', async (req, res) => {
+  try {
+    const { serverId } = req.params;
+    let cost = await ServerCost.findOne({ serverId });
+    
+    if (!cost) {
+      // Créer entrée par défaut
+      cost = await ServerCost.create({ serverId });
+    }
+    
+    res.json({ success: true, data: cost });
+  } catch (error) {
+    console.error('❌ Erreur récupération coût serveur:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Mettre à jour coûts serveur
+app.put('/api/servers/:serverId/cost', async (req, res) => {
+  try {
+    const { serverId } = req.params;
+    const { baseCost, electricityCost, networkCost, amortization, otherCharges } = req.body;
+    
+    let cost = await ServerCost.findOne({ serverId });
+    
+    if (!cost) {
+      cost = new ServerCost({ serverId });
+    }
+    
+    if (baseCost !== undefined) cost.baseCost = baseCost;
+    if (electricityCost !== undefined) cost.electricityCost = electricityCost;
+    if (networkCost !== undefined) cost.networkCost = networkCost;
+    if (amortization !== undefined) cost.amortization = amortization;
+    if (otherCharges !== undefined) cost.otherCharges = otherCharges;
+    
+    await cost.save();
+    
+    res.json({ success: true, data: cost });
+  } catch (error) {
+    console.error('❌ Erreur mise à jour coût serveur:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Récupérer pricing site
+app.get('/api/sites/:siteId/pricing', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    let pricing = await SitePricing.findOne({ siteId });
+    
+    if (!pricing) {
+      // Créer entrée par défaut
+      pricing = await SitePricing.create({ siteId });
+    }
+    
+    res.json({ success: true, data: pricing });
+  } catch (error) {
+    console.error('❌ Erreur récupération pricing site:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Mettre à jour pricing site
+app.put('/api/sites/:siteId/pricing', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const { actualPrice, monthlyCost, suggestedBreakdown } = req.body;
+    
+    let pricing = await SitePricing.findOne({ siteId });
+    
+    if (!pricing) {
+      pricing = new SitePricing({ siteId });
+    }
+    
+    if (actualPrice !== undefined) pricing.actualPrice = actualPrice;
+    if (monthlyCost !== undefined) pricing.monthlyCost = monthlyCost;
+    if (suggestedBreakdown) pricing.suggestedBreakdown = suggestedBreakdown;
+    
+    await pricing.save();
+    
+    res.json({ success: true, data: pricing });
+  } catch (error) {
+    console.error('❌ Erreur mise à jour pricing site:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Vue d'ensemble financière (Analytics)
+app.get('/api/analytics/financial', async (req, res) => {
+  try {
+    // Récupérer tous les coûts serveurs
+    const serverCosts = await ServerCost.find();
+    const totalServerCosts = serverCosts.reduce((sum, s) => sum + s.totalMonthly, 0);
+    
+    // Récupérer tous les pricings sites
+    const sitePricings = await SitePricing.find();
+    const totalRevenue = sitePricings.reduce((sum, s) => sum + s.actualPrice, 0);
+    const totalProfit = sitePricings.reduce((sum, s) => sum + s.monthlyProfit, 0);
+    
+    // Calculer marge globale
+    const globalMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0;
+    
+    res.json({
+      success: true,
+      data: {
+        servers: {
+          count: serverCosts.length,
+          totalMonthlyCost: totalServerCosts,
+          totalYearlyCost: totalServerCosts * 12,
+          details: serverCosts
+        },
+        sites: {
+          count: sitePricings.length,
+          totalMonthlyRevenue: totalRevenue,
+          totalYearlyRevenue: totalRevenue * 12,
+          totalMonthlyProfit: totalProfit,
+          totalYearlyProfit: totalProfit * 12,
+          globalMargin: parseFloat(globalMargin),
+          details: sitePricings
+        },
+        summary: {
+          monthlyRevenue: totalRevenue,
+          monthlyCosts: totalServerCosts,
+          monthlyProfit: totalProfit,
+          profitMargin: parseFloat(globalMargin)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur récupération analytics financiers:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

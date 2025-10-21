@@ -132,8 +132,11 @@ const Sites = () => {
                   <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Requêtes/24h</span>
                 </div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {site.requests >= 1000 ? `${(site.requests / 1000).toFixed(1)}k` : site.requests}
+                  {site.external ? 'TBD' : (site.requests >= 1000 ? `${(site.requests / 1000).toFixed(1)}k` : site.requests)}
                 </div>
+                {site.external && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Non disponible</p>
+                )}
               </div>
 
               {/* Errors */}
@@ -143,11 +146,15 @@ const Sites = () => {
                   <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Erreurs/24h</span>
                 </div>
                 <div className={`text-2xl font-bold ${
+                  site.external ? 'text-slate-900 dark:text-slate-100' :
                   site.errors < 10 ? 'text-emerald-600' : 
                   site.errors < 100 ? 'text-amber-600' : 'text-red-600'
                 }`}>
-                  {site.errors}
+                  {site.external ? 'TBD' : site.errors}
                 </div>
+                {site.external && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Non disponible</p>
+                )}
               </div>
             </div>
 
