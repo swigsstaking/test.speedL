@@ -46,6 +46,12 @@ export const monitoringApi = {
     return response.data;
   },
 
+  // Récupérer stats Nginx (uptime, requêtes, erreurs)
+  getSiteStats: async (siteId, period = '24h') => {
+    const response = await api.get(`/sites/${siteId}/stats?period=${period}`);
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');

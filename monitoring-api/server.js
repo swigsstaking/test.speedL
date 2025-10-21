@@ -316,6 +316,82 @@ app.get('/api/sites/:siteId/pagespeed', async (req, res) => {
   }
 });
 
+// Stats Nginx pour un site
+app.get('/api/sites/:siteId/stats', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const { period = '24h' } = req.query;
+    
+    console.log(`📊 Récupération stats Nginx pour ${siteId} (${period})`);
+    
+    // Récupérer le domaine du site
+    const axios = (await import('axios')).default;
+    let domain = `${siteId}.swigs.online`;
+    
+    try {
+      const backendResponse = await axios.get('http://localhost:3000/api/sites', { timeout: 3000 });
+      const site = backendResponse.data?.data?.find(s => s.slug === siteId);
+      if (site) {
+        domain = site.domains?.[0] || `${site.slug.replace(/-/g, '')}.${site.domain}`;
+      }
+    } catch (e) {
+      console.log('⚠️ Backend non accessible, utilisation domaine par défaut');
+    }
+    
+    // Calculer la date de début
+    const now = Date.now();
+    let since;
+    switch (period) {
+      case '1h':
+        since = new Date(now - 60 * 60 * 1000);
+        break;
+      case '24h':
+        since = new Date(now - 24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        since = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        since = new Date(now - 30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        since = new Date(now - 24 * 60 * 60 * 1000);
+    }
+    
+    // Analyser les logs Nginx
+    const { analyzeSiteLogs, calculateUptime } = await import('./src/services/nginx-logs.service.js');
+    const nginxStats = await analyzeSiteLogs(domain, since);
+    
+    // Calculer l'uptime depuis MongoDB
+    const metricsHistory = await SiteMetric.find({
+      siteId,
+      timestamp: { $gte: since }
+    }).sort({ timestamp: 1 });
+    
+    const uptime = calculateUptime(metricsHistory);
+    
+    res.json({
+      success: true,
+      data: {
+        siteId,
+        domain,
+        period,
+        uptime: parseFloat(uptime),
+        requests: nginxStats.requests,
+        errors: nginxStats.errors,
+        bandwidth: nginxStats.bandwidth,
+        uniqueVisitors: nginxStats.uniqueVisitors,
+        statusCodes: nginxStats.statusCodes,
+        topPaths: nginxStats.topPaths
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur récupération stats:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Historique d'un site spécifique
 app.get('/api/sites/:siteId', async (req, res) => {
   try {

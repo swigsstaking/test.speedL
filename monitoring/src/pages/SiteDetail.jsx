@@ -32,6 +32,13 @@ const SiteDetail = () => {
     refetchInterval: 300000, // 5 minutes
   });
 
+  const { data: siteStatsData } = useQuery({
+    queryKey: ['site-stats', siteId, period],
+    queryFn: () => monitoringApi.getSiteStats(siteId, period),
+    enabled: !!siteId,
+    refetchInterval: 60000, // 1 minute
+  });
+
   const measurePageSpeedMutation = useMutation({
     mutationFn: (strategy) => monitoringApi.measurePageSpeed(siteId, strategy),
     onSuccess: (data) => {
@@ -46,6 +53,7 @@ const SiteDetail = () => {
 
   const site = sitesData?.data?.find(s => s.id === siteId);
   const pageSpeed = pageSpeedData?.data?.latest;
+  const stats = siteStatsData?.data;
 
   const periods = [
     { value: '1h', label: '1h', points: 12 },
@@ -237,10 +245,13 @@ const SiteDetail = () => {
             <TrendingUp className="w-5 h-5 text-emerald-600" />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Uptime</span>
           </div>
-          <div className="text-3xl font-bold text-emerald-600">
-            {site.uptime}%
+          <div className={`text-3xl font-bold ${
+            (stats?.uptime || 0) >= 99.9 ? 'text-emerald-600' :
+            (stats?.uptime || 0) >= 99 ? 'text-amber-600' : 'text-red-600'
+          }`}>
+            {stats?.uptime?.toFixed(2) || '0.00'}%
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Disponibilité 30 jours</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Période: {selectedPeriod?.label}</p>
         </motion.div>
 
         <motion.div
@@ -254,9 +265,11 @@ const SiteDetail = () => {
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Requêtes</span>
           </div>
           <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            0
+            {stats?.requests?.toLocaleString() || '0'}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">TODO: Logs Nginx</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+            {stats?.uniqueVisitors || 0} visiteurs uniques
+          </p>
         </motion.div>
 
         <motion.div
@@ -266,13 +279,19 @@ const SiteDetail = () => {
           className="metric-card"
         >
           <div className="flex items-center gap-2 mb-3">
-            <AlertCircle className="w-5 h-5 text-slate-400" />
+            <AlertCircle className={`w-5 h-5 ${
+              (stats?.errors || 0) === 0 ? 'text-emerald-500' : 'text-red-500'
+            }`} />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Erreurs</span>
           </div>
-          <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            0
+          <div className={`text-3xl font-bold ${
+            (stats?.errors || 0) === 0 ? 'text-emerald-600' : 'text-red-600'
+          }`}>
+            {stats?.errors || 0}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">Dernières 24h</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+            Période: {selectedPeriod?.label}
+          </p>
         </motion.div>
       </div>
 
