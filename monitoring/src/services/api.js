@@ -58,6 +58,36 @@ export const monitoringApi = {
     return response.data;
   },
 
+  // ==================== FINANCIER ====================
+
+  // Serveur - Coûts
+  getServerCost: async (serverId) => {
+    const response = await api.get(`/servers/${serverId}/cost`);
+    return response.data;
+  },
+
+  updateServerCost: async (serverId, costData) => {
+    const response = await api.put(`/servers/${serverId}/cost`, costData);
+    return response.data;
+  },
+
+  // Site - Pricing
+  getSitePricing: async (siteId) => {
+    const response = await api.get(`/sites/${siteId}/pricing`);
+    return response.data;
+  },
+
+  updateSitePricing: async (siteId, pricingData) => {
+    const response = await api.put(`/sites/${siteId}/pricing`, pricingData);
+    return response.data;
+  },
+
+  // Analytics financiers
+  getFinancialAnalytics: async () => {
+    const response = await api.get('/analytics/financial');
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');

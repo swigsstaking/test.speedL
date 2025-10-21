@@ -5,7 +5,7 @@ import Servers from './pages/Servers';
 import ServerDetail from './pages/ServerDetail';
 import Sites from './pages/Sites';
 import SiteDetail from './pages/SiteDetail';
-import Analytics from './pages/Analytics';
+import FinancialAnalytics from './pages/FinancialAnalytics';
 
 function App() {
   return (
@@ -16,7 +16,7 @@ function App() {
         <Route path="servers/:serverId" element={<ServerDetail />} />
         <Route path="sites" element={<Sites />} />
         <Route path="sites/:siteId" element={<SiteDetail />} />
-        <Route path="analytics" element={<Analytics />} />
+        <Route path="analytics" element={<FinancialAnalytics />} />
       </Route>
     </Routes>
   );
