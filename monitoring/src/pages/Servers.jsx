@@ -129,23 +129,17 @@ const Servers = () => {
                   <Wifi className="w-4 h-4 text-primary-600" />
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Réseau</span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div>
-                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-                      <span>↓ Download</span>
-                      <span className="font-medium text-slate-900 dark:text-slate-100">{((network.rx || 0) / 1024 / 1024).toFixed(2)} MB/s</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-1.5">
-                      <div className="h-1.5 rounded-full bg-primary-500" style={{ width: '60%' }}></div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">↓ Download</span>
+                      <span className="text-sm font-bold text-emerald-600">{((network.rx || 0) / 1024 / 1024).toFixed(2)} MB/s</span>
                     </div>
                   </div>
                   <div>
-                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-                      <span>↑ Upload</span>
-                      <span className="font-medium text-slate-900 dark:text-slate-100">{((network.tx || 0) / 1024 / 1024).toFixed(2)} MB/s</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-1.5">
-                      <div className="h-1.5 rounded-full bg-emerald-500" style={{ width: '40%' }}></div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">↑ Upload</span>
+                      <span className="text-sm font-bold text-blue-600">{((network.tx || 0) / 1024 / 1024).toFixed(2)} MB/s</span>
                     </div>
                   </div>
                 </div>
