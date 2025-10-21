@@ -439,6 +439,71 @@ app.get('/api/sites/:siteId', async (req, res) => {
   }
 });
 
+// Stats Nginx pour tous les sites (optimisé)
+app.get('/api/sites/stats/all', async (req, res) => {
+  try {
+    const { period = '24h' } = req.query;
+    
+    console.log(`📊 Récupération stats tous sites (${period})`);
+    
+    // Récupérer la liste des sites
+    const axios = (await import('axios')).default;
+    let sites = [];
+    
+    try {
+      const backendResponse = await axios.get('http://localhost:3000/api/sites', { timeout: 3000 });
+      if (backendResponse.data?.data?.length > 0) {
+        sites = backendResponse.data.data;
+      }
+    } catch (e) {
+      console.log('⚠️ Backend non accessible');
+    }
+    
+    // Calculer date de début
+    const now = Date.now();
+    let since;
+    switch (period) {
+      case '1h': since = new Date(now - 60 * 60 * 1000); break;
+      case '24h': since = new Date(now - 24 * 60 * 60 * 1000); break;
+      case '7d': since = new Date(now - 7 * 24 * 60 * 60 * 1000); break;
+      case '30d': since = new Date(now - 30 * 24 * 60 * 60 * 1000); break;
+      default: since = new Date(now - 24 * 60 * 60 * 1000);
+    }
+    
+    // Récupérer stats pour chaque site
+    const { analyzeSiteLogs, calculateUptime } = await import('./src/services/nginx-logs.service.js');
+    const allStats = {};
+    
+    for (const site of sites) {
+      const domain = site.domains?.[0] || `${site.slug.replace(/-/g, '')}.${site.domain}`;
+      const nginxStats = await analyzeSiteLogs(domain, since);
+      
+      // Uptime depuis MongoDB
+      const metricsHistory = await SiteMetric.find({
+        siteId: site.slug,
+        timestamp: { $gte: since }
+      });
+      const uptime = calculateUptime(metricsHistory);
+      
+      allStats[site.slug] = {
+        uptime: parseFloat(uptime),
+        requests: nginxStats.requests,
+        errors: nginxStats.errors,
+        uniqueVisitors: nginxStats.uniqueVisitors
+      };
+    }
+    
+    res.json({
+      success: true,
+      data: allStats
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur récupération stats tous sites:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Sites - Version complète avec vérification uptime/SSL
 app.get('/api/sites', async (req, res) => {
   try {

@@ -52,6 +52,12 @@ export const monitoringApi = {
     return response.data;
   },
 
+  // Récupérer stats de tous les sites
+  getAllSitesStats: async (period = '24h') => {
+    const response = await api.get(`/sites/stats/all?period=${period}`);
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');

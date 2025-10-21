@@ -13,12 +13,23 @@ const Sites = () => {
     refetchInterval: 30000, // Refresh toutes les 30s
   });
 
-  const sites = (sitesData?.data || []).map(site => ({
-    ...site,
-    requests: 0, // TODO: Parser logs Nginx ou Analytics
-    errors: 0, // TODO: Parser logs erreurs
-    sparkline: Array.from({ length: 10 }, () => site.latency + Math.random() * 10 - 5),
-  }));
+  const { data: allStatsData } = useQuery({
+    queryKey: ['all-sites-stats'],
+    queryFn: () => monitoringApi.getAllSitesStats('24h'),
+    refetchInterval: 60000, // Refresh toutes les minutes
+  });
+
+  const sites = (sitesData?.data || []).map(site => {
+    const stats = allStatsData?.data?.[site.id] || {};
+    return {
+      ...site,
+      uptime: stats.uptime || 0,
+      requests: stats.requests || 0,
+      errors: stats.errors || 0,
+      uniqueVisitors: stats.uniqueVisitors || 0,
+      sparkline: Array.from({ length: 10 }, () => site.latency + Math.random() * 10 - 5),
+    };
+  });
 
   return (
     <div className="space-y-6">
