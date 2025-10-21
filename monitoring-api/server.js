@@ -211,6 +211,23 @@ app.post('/api/sites/:siteId/pagespeed', async (req, res) => {
     
     console.log(`📊 Démarrage mesure PageSpeed pour ${siteId} (${strategy})...`);
     
+    // Vérifier si une mesure récente existe (< 24h)
+    const recentMeasure = await PageSpeedMetric.findOne({
+      siteId,
+      strategy,
+      timestamp: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+    }).sort({ timestamp: -1 });
+    
+    if (recentMeasure) {
+      console.log(`⏰ Mesure récente trouvée (${new Date(recentMeasure.timestamp).toLocaleString()}), réutilisation`);
+      return res.json({
+        success: true,
+        cached: true,
+        message: 'Mesure récente réutilisée (< 24h)',
+        metrics: recentMeasure
+      });
+    }
+    
     // Récupérer l'URL du site
     const axios = (await import('axios')).default;
     let siteUrl;
