@@ -234,18 +234,31 @@ app.post('/api/sites/:siteId/pagespeed', async (req, res) => {
     const axios = (await import('axios')).default;
     let siteUrl;
     
-    try {
-      const backendResponse = await axios.get('http://localhost:3000/api/sites', { timeout: 3000 });
-      const site = backendResponse.data?.data?.find(s => s.slug === siteId);
-      
-      if (site) {
-        const domain = site.domains?.[0] || `${site.slug.replace(/-/g, '')}.${site.domain}`;
-        siteUrl = `https://${domain}`;
-      } else {
+    // Sites externes définis localement
+    const externalSites = {
+      'moontain': 'https://www.moontain.ch',
+      'adlr': 'https://www.adlrcosmeticauto.ch'
+    };
+    
+    // Vérifier si c'est un site externe
+    if (externalSites[siteId]) {
+      siteUrl = externalSites[siteId];
+      console.log(`🌍 Site externe détecté: ${siteUrl}`);
+    } else {
+      // Sinon, récupérer depuis le backend
+      try {
+        const backendResponse = await axios.get('http://localhost:3000/api/sites', { timeout: 3000 });
+        const site = backendResponse.data?.data?.find(s => s.slug === siteId);
+        
+        if (site) {
+          const domain = site.domains?.[0] || `${site.slug.replace(/-/g, '')}.${site.domain}`;
+          siteUrl = `https://${domain}`;
+        } else {
+          siteUrl = `https://${siteId}.swigs.online`;
+        }
+      } catch {
         siteUrl = `https://${siteId}.swigs.online`;
       }
-    } catch {
-      siteUrl = `https://${siteId}.swigs.online`;
     }
     
     // Mesurer avec PageSpeed
