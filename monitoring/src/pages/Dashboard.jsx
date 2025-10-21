@@ -220,7 +220,7 @@ const Dashboard = () => {
                     </div>
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
+                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-1">
                           <Cpu className="w-3 h-3" />
                           CPU
                         </div>
@@ -236,11 +236,11 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div>
-                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
+                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-1">
                           <Activity className="w-3 h-3" />
                           RAM
                         </div>
-                        <div className="text-sm font-semibold text-slate-900">{ram.toFixed(1)}%</div>
+                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{ram.toFixed(1)}%</div>
                         <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5 mt-1">
                           <div 
                             className={`h-1.5 rounded-full ${
@@ -252,11 +252,11 @@ const Dashboard = () => {
                         </div>
                       </div>
                       <div>
-                        <div className="flex items-center gap-1 text-xs text-slate-500 mb-1">
+                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-1">
                           <HardDrive className="w-3 h-3" />
                           Disque
                         </div>
-                        <div className="text-sm font-semibold text-slate-900">{disk.toFixed(1)}%</div>
+                        <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{disk.toFixed(1)}%</div>
                         <div className="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-1.5 mt-1">
                           <div 
                             className={`h-1.5 rounded-full ${
@@ -343,13 +343,13 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
-          className="bg-red-50 border border-red-200 rounded-xl p-4"
+          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4"
         >
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-semibold text-red-900">Alerte : Site hors ligne</h4>
-              <p className="text-sm text-red-700 mt-1">
+              <h4 className="font-semibold text-red-900 dark:text-red-300">Alerte : Site hors ligne</h4>
+              <p className="text-sm text-red-700 dark:text-red-400 mt-1">
                 Le site autre-site.com est actuellement hors ligne. Dernière vérification il y a 2 minutes.
               </p>
             </div>

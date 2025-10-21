@@ -88,9 +88,9 @@ const Analytics = () => {
         >
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-slate-500 font-medium">Coût Total/Mois</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{totalCost.toFixed(2)} CHF</p>
-              <p className="text-sm text-emerald-600 mt-2">-8% vs mois dernier</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Coût Total/Mois</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-2">{totalCost.toFixed(2)} CHF</p>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-2">-8% vs mois dernier</p>
             </div>
             <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-emerald-600" />
@@ -106,9 +106,9 @@ const Analytics = () => {
         >
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-slate-500 font-medium">Coût/Site Moyen</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">{sites.length > 0 ? (totalCost / sites.length).toFixed(2) : '0.00'} CHF</p>
-              <p className="text-sm text-slate-600 mt-2">{sites.length} sites actifs</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Coût/Site Moyen</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-2">{sites.length > 0 ? (totalCost / sites.length).toFixed(2) : '0.00'} CHF</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">{sites.length} sites actifs</p>
             </div>
             <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
               <Package className="w-6 h-6 text-primary-600" />
@@ -124,9 +124,9 @@ const Analytics = () => {
         >
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-slate-500 font-medium">Économies</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">-0.88€</p>
-              <p className="text-sm text-emerald-600 mt-2">vs mois dernier</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Économies</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-2">-0.88€</p>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-2">vs mois dernier</p>
             </div>
             <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-amber-600" />
@@ -142,9 +142,9 @@ const Analytics = () => {
         >
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-slate-500 font-medium">Efficacité</p>
-              <p className="text-3xl font-bold text-slate-900 mt-2">92%</p>
-              <p className="text-sm text-emerald-600 mt-2">+3% vs mois dernier</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Efficacité</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-2">92%</p>
+              <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-2">+3% vs mois dernier</p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
               <Zap className="w-6 h-6 text-purple-600" />
@@ -164,7 +164,7 @@ const Analytics = () => {
         >
           <div className="card-header">
             <h3 className="card-title">Coûts par Site</h3>
-            <span className="text-sm text-slate-500">Répartition mensuelle</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Répartition mensuelle</span>
           </div>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={costData}>
@@ -197,7 +197,7 @@ const Analytics = () => {
         >
           <div className="card-header">
             <h3 className="card-title">Répartition des Ressources</h3>
-            <span className="text-sm text-slate-500">Utilisation globale</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">Utilisation globale</span>
           </div>
           <div className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={300}>
@@ -234,8 +234,8 @@ const Analytics = () => {
                   className="w-3 h-3 rounded-full" 
                   style={{ backgroundColor: item.color }}
                 ></div>
-                <span className="text-sm text-slate-600">{item.name}</span>
-                <span className="text-sm font-semibold text-slate-900 ml-auto">{item.value}%</span>
+                <span className="text-sm text-slate-600 dark:text-slate-400">{item.name}</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 ml-auto">{item.value}%</span>
               </div>
             ))}
           </div>
@@ -247,11 +247,11 @@ const Analytics = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="card"
+        className="card dark:bg-slate-800 dark:text-slate-100"
       >
         <div className="card-header">
           <h3 className="card-title">Évolution Sites & Coûts</h3>
-          <span className="text-sm text-slate-500">6 derniers mois</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">6 derniers mois</span>
         </div>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={sitesOnlineData}>
@@ -302,41 +302,41 @@ const Analytics = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Site</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">CPU</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">RAM</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Bande passante</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Stockage</th>
-                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Total</th>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Site</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">CPU</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">RAM</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Bande passante</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Stockage</th>
+                <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Total</th>
               </tr>
             </thead>
             <tbody>
               {costData.map((site) => (
-                <tr key={site.site} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-3 px-4 text-sm font-medium text-slate-900">{site.site}.swigs.online</td>
-                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.cpu.toFixed(2)} CHF</td>
-                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.ram.toFixed(2)} CHF</td>
-                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.bandwidth.toFixed(2)} CHF</td>
-                  <td className="py-3 px-4 text-sm text-right text-slate-600">{site.storage.toFixed(2)} CHF</td>
-                  <td className="py-3 px-4 text-sm text-right font-semibold text-slate-900">{site.total.toFixed(2)} CHF</td>
+                <tr key={site.site} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                  <td className="py-3 px-4 text-sm font-medium text-slate-900 dark:text-slate-100">{site.site}.swigs.online</td>
+                  <td className="py-3 px-4 text-sm text-right text-slate-600 dark:text-slate-400">{site.cpu.toFixed(2)} CHF</td>
+                  <td className="py-3 px-4 text-sm text-right text-slate-600 dark:text-slate-400">{site.ram.toFixed(2)} CHF</td>
+                  <td className="py-3 px-4 text-sm text-right text-slate-600 dark:text-slate-400">{site.bandwidth.toFixed(2)} CHF</td>
+                  <td className="py-3 px-4 text-sm text-right text-slate-600 dark:text-slate-400">{site.storage.toFixed(2)} CHF</td>
+                  <td className="py-3 px-4 text-sm text-right font-semibold text-slate-900 dark:text-slate-100">{site.total.toFixed(2)} CHF</td>
                 </tr>
               ))}
-              <tr className="bg-slate-50 font-semibold">
-                <td className="py-3 px-4 text-sm text-slate-900">Total</td>
-                <td className="py-3 px-4 text-sm text-right text-slate-900">
+              <tr className="bg-slate-50 dark:bg-slate-700/50 font-semibold">
+                <td className="py-3 px-4 text-sm text-slate-900 dark:text-slate-100">Total</td>
+                <td className="py-3 px-4 text-sm text-right text-slate-900 dark:text-slate-100">
                   {costData.reduce((sum, s) => sum + s.cpu, 0).toFixed(2)} CHF
                 </td>
-                <td className="py-3 px-4 text-sm text-right text-slate-900">
+                <td className="py-3 px-4 text-sm text-right text-slate-900 dark:text-slate-100">
                   {costData.reduce((sum, s) => sum + s.ram, 0).toFixed(2)} CHF
                 </td>
-                <td className="py-3 px-4 text-sm text-right text-slate-900">
+                <td className="py-3 px-4 text-sm text-right text-slate-900 dark:text-slate-100">
                   {costData.reduce((sum, s) => sum + s.bandwidth, 0).toFixed(2)} CHF
                 </td>
-                <td className="py-3 px-4 text-sm text-right text-slate-900">
+                <td className="py-3 px-4 text-sm text-right text-slate-900 dark:text-slate-100">
                   {costData.reduce((sum, s) => sum + s.storage, 0).toFixed(2)} CHF
                 </td>
-                <td className="py-3 px-4 text-sm text-right text-primary-600 font-bold">
+                <td className="py-3 px-4 text-sm text-right text-primary-600 dark:text-primary-400 font-bold">
                   {costData.reduce((sum, s) => sum + s.total, 0).toFixed(2)} CHF
                 </td>
               </tr>
