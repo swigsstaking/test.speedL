@@ -977,6 +977,34 @@ app.post('/api/invoices/:id/pay', async (req, res) => {
   }
 });
 
+// Changer statut facture
+app.patch('/api/invoices/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const invoice = await Invoice.findById(id);
+    if (!invoice) {
+      return res.status(404).json({ success: false, error: 'Facture non trouvée' });
+    }
+    
+    invoice.status = status;
+    if (status !== 'paid') {
+      invoice.paidDate = null;
+    }
+    await invoice.save();
+    
+    res.json({
+      success: true,
+      data: invoice,
+      message: `Statut changé en ${status}`
+    });
+  } catch (error) {
+    console.error('❌ Erreur changement statut:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Statistiques facturation
 app.get('/api/invoices/stats', async (req, res) => {
   try {

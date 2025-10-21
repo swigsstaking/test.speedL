@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X, RefreshCw, Info, FileText, Calendar, CheckCircle, AlertCircle as AlertCircleIcon, Download, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
 import { monitoringApi } from '../services/api';
 
 const FinancialAnalytics = () => {
@@ -153,6 +153,14 @@ const FinancialAnalytics = () => {
   // Mutation pour marquer facture payée
   const markPaidMutation = useMutation({
     mutationFn: ({ invoiceId, paymentData }) => monitoringApi.markInvoiceAsPaid(invoiceId, paymentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['invoices']);
+    },
+  });
+
+  // Mutation pour changer statut facture
+  const changeStatusMutation = useMutation({
+    mutationFn: ({ invoiceId, status }) => monitoringApi.changeInvoiceStatus(invoiceId, status),
     onSuccess: () => {
       queryClient.invalidateQueries(['invoices']);
     },
@@ -312,7 +320,7 @@ const FinancialAnalytics = () => {
             </span>
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyChartData} barGap={-20} barCategoryGap="20%">
+            <ComposedChart data={monthlyChartData} barGap={2} barCategoryGap="15%">
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" stroke="#64748b" />
               <YAxis stroke="#64748b" />
@@ -327,34 +335,37 @@ const FinancialAnalytics = () => {
                 formatter={(value, name) => [`${value.toFixed(2)} CHF`, name]}
               />
               <Legend />
-              {/* Barres projetées (transparentes/rayées) */}
+              {/* Barres projetées (rayées) - en arrière-plan */}
               <Bar 
                 dataKey="Revenus Projetés" 
                 fill="url(#revenuePattern)" 
                 radius={[4, 4, 0, 0]}
-                fillOpacity={0.4}
+                barSize={60}
               />
               <Bar 
                 dataKey="Profit Projeté" 
                 fill="url(#profitPattern)" 
                 radius={[4, 4, 0, 0]}
-                fillOpacity={0.4}
+                barSize={60}
               />
-              {/* Barres réelles (pleines) - superposées */}
+              {/* Barres réelles (pleines) - EXACTEMENT superposées */}
               <Bar 
                 dataKey="Revenus Payés" 
                 fill="#10b981" 
                 radius={[4, 4, 0, 0]}
+                barSize={60}
               />
               <Bar 
                 dataKey="Coûts" 
                 fill="#ef4444" 
                 radius={[4, 4, 0, 0]}
+                barSize={60}
               />
               <Bar 
                 dataKey="Profit Réel" 
                 fill="#3b82f6" 
                 radius={[4, 4, 0, 0]}
+                barSize={60}
               />
               {/* Patterns pour barres projetées */}
               <defs>
@@ -365,7 +376,7 @@ const FinancialAnalytics = () => {
                   <line x1="0" y1="0" x2="0" y2="8" stroke="#3b82f6" strokeWidth="4" />
                 </pattern>
               </defs>
-            </BarChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </motion.div>
 
@@ -699,7 +710,19 @@ const FinancialAnalytics = () => {
                         >
                           <Download className="w-4 h-4" />
                         </a>
-                        {invoice.status !== 'paid' && (
+                        {invoice.status === 'paid' ? (
+                          <button
+                            onClick={() => changeStatusMutation.mutate({ 
+                              invoiceId: invoice._id, 
+                              status: 'sent'
+                            })}
+                            disabled={changeStatusMutation.isPending}
+                            className="p-1 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 rounded"
+                            title="Marquer en attente"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        ) : (
                           <button
                             onClick={() => markPaidMutation.mutate({ 
                               invoiceId: invoice._id, 

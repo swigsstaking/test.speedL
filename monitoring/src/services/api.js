@@ -125,6 +125,11 @@ export const monitoringApi = {
     return response.data;
   },
 
+  changeInvoiceStatus: async (invoiceId, status) => {
+    const response = await api.patch(`/invoices/${invoiceId}/status`, { status });
+    return response.data;
+  },
+
   getInvoiceStats: async (year, month) => {
     const params = new URLSearchParams({ year, ...(month && { month }) }).toString();
     const response = await api.get(`/invoices/stats?${params}`);
