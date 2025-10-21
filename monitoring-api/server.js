@@ -781,7 +781,9 @@ app.get('/api/analytics/financial', async (req, res) => {
     // Récupérer tous les pricings sites
     const sitePricings = await SitePricing.find();
     const totalRevenue = sitePricings.reduce((sum, s) => sum + s.actualPrice, 0);
-    const totalProfit = sitePricings.reduce((sum, s) => sum + s.monthlyProfit, 0);
+    
+    // Calculer le profit global RÉEL : Revenus - Coûts serveurs
+    const totalProfit = totalRevenue - totalServerCosts;
     
     // Calculer marge globale
     const globalMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0;

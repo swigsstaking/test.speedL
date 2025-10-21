@@ -101,6 +101,23 @@ const FinancialAnalytics = () => {
         </button>
       </div>
 
+      {/* Note explicative */}
+      <div className="card bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-slate-700 dark:text-slate-300">
+            <p className="font-medium mb-2">💡 Comment utiliser :</p>
+            <ul className="space-y-1 list-disc list-inside">
+              <li><strong>Coûts Serveurs</strong> : Entre tous les coûts mensuels (location, électricité, réseau, amortissement, maintenance)</li>
+              <li><strong>Prix Réel</strong> : Le montant facturé au client chaque mois</li>
+              <li><strong>Coût Site</strong> : La part du serveur + ressources utilisées par ce site</li>
+              <li><strong>Profit Global</strong> : Revenus totaux - Coûts serveurs totaux</li>
+              <li><strong>Prix ajustés Suisse</strong> : +50-60% vs moyenne européenne (électricité, bande passante, stockage)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div
@@ -286,15 +303,15 @@ const FinancialAnalytics = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700">
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Serveur</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Coût</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Électricité</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Réseau</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Amortissement</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Charges</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Total/mois</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Total/an</th>
-                <th className="text-center py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Actions</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Serveur</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Coût de base (location, hardware, etc.)">Coût Base</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Consommation électrique mensuelle">Électricité</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Bande passante et internet">Réseau</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Amortissement hardware sur durée de vie">Amortissement</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Autres charges (maintenance, licences, etc.)">Autres</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Total/mois</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Total/an</th>
+                <th className="text-center py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -336,13 +353,13 @@ const FinancialAnalytics = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-700">
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Site</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Prix Suggéré</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Prix Réel</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Coût</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Profit</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Marge</th>
-                <th className="text-center py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Actions</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Site</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Prix calculé automatiquement selon ressources (Suisse)">Prix Suggéré</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Prix facturé au client (CHF/mois)">Prix Réel</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Coût mensuel pour héberger ce site (part serveur + ressources)">Coût Site</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="Prix Réel - Coût Site">Profit</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap" title="(Profit / Prix Réel) × 100">Marge %</th>
+                <th className="text-center py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody>

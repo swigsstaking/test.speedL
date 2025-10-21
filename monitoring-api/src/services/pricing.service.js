@@ -93,25 +93,25 @@ export async function calculateSuggestedPrice(siteId, options = {}) {
     // Estimer à partir des requêtes (moyenne 1MB par requête)
     const totalRequests = siteMetrics.length; // Nombre de checks
     const estimatedBandwidthGB = (totalRequests * 1) / 1024; // MB -> GB
-    const bandwidthCostPerGB = 0.10; // CHF par GB (à ajuster)
+    const bandwidthCostPerGB = 0.15; // CHF par GB (Suisse: +50% vs moyenne)
     const bandwidthCost = estimatedBandwidthGB * bandwidthCostPerGB;
 
     // 9. Calculer le coût du stockage
     // Estimation: 5GB par site en moyenne
     const estimatedStorageGB = 5;
-    const storageCostPerGB = 0.05; // CHF par GB par mois (à ajuster)
+    const storageCostPerGB = 0.08; // CHF par GB par mois (Suisse: +60% vs moyenne)
     const storageCost = estimatedStorageGB * storageCostPerGB;
 
     // 10. Calculer le coût des requêtes
     // Basé sur le nombre de requêtes (si disponible depuis Nginx logs)
     const requestsPerMonth = 50000; // Estimation (à remplacer par vraies données)
-    const costPer1000Requests = 0.01; // CHF par 1000 requêtes
+    const costPer1000Requests = 0.015; // CHF par 1000 requêtes (Suisse: +50%)
     const requestsCost = (requestsPerMonth / 1000) * costPer1000Requests;
 
     // 11. Calculer le coût total de base
     const baseCost = serverShareCost + bandwidthCost + storageCost + requestsCost;
 
-    // 12. Appliquer la marge
+    // 12. Appliquer la marge (Suisse: marge plus élevée recommandée)
     const suggestedPrice = baseCost * (1 + marginPercent / 100);
 
     return {
