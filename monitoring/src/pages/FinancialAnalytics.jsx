@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X, RefreshCw, Info } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X, RefreshCw, Info, FileText, Calendar, CheckCircle, AlertCircle as AlertCircleIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { monitoringApi } from '../services/api';
@@ -31,12 +31,29 @@ const FinancialAnalytics = () => {
     refetchInterval: 300000, // 5 minutes
   });
 
+  // Récupérer prévisions
+  const { data: forecastsData } = useQuery({
+    queryKey: ['forecasts'],
+    queryFn: () => monitoringApi.getForecasts(6),
+    refetchInterval: 300000,
+  });
+
+  // Récupérer factures
+  const now = new Date();
+  const { data: invoicesData } = useQuery({
+    queryKey: ['invoices', now.getFullYear(), now.getMonth() + 1],
+    queryFn: () => monitoringApi.getInvoices({ year: now.getFullYear(), month: now.getMonth() + 1 }),
+    refetchInterval: 60000,
+  });
+
   const financial = financialData?.data || {};
   const summary = financial.summary || {};
   const serverCosts = financial.servers?.details || [];
   const serverProfitability = financial.servers?.profitability || [];
   const sites = financial.sites?.details || [];
   const monthlyHistory = monthlyHistoryData?.data || [];
+  const forecasts = forecastsData?.data?.forecasts || [];
+  const invoices = invoicesData?.data || [];
 
   // Fusionner serveurs avec leurs coûts
   const allServers = (serversData?.data || []).map(server => {
@@ -236,7 +253,7 @@ const FinancialAnalytics = () => {
         >
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Évolution Mensuelle (12 mois)</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyChartData}>
+            <BarChart data={monthlyChartData} barGap={2} barCategoryGap="15%">
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" stroke="#64748b" />
               <YAxis stroke="#64748b" />
@@ -250,10 +267,10 @@ const FinancialAnalytics = () => {
                 formatter={(value) => `${value.toFixed(2)} CHF`}
               />
               <Legend />
-              <Line type="monotone" dataKey="Revenus" stroke="#10b981" strokeWidth={2} />
-              <Line type="monotone" dataKey="Coûts" stroke="#ef4444" strokeWidth={2} />
-              <Line type="monotone" dataKey="Profit" stroke="#3b82f6" strokeWidth={2} />
-            </LineChart>
+              <Bar dataKey="Revenus" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Coûts" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Profit" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         </motion.div>
 

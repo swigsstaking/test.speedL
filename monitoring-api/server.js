@@ -919,6 +919,134 @@ app.post('/api/analytics/calculate-monthly', async (req, res) => {
   }
 });
 
+// ==================== FACTURATION ====================
+
+// Générer factures mensuelles
+app.post('/api/invoices/generate', async (req, res) => {
+  try {
+    const { year, month } = req.body;
+    const { generateMonthlyInvoices } = await import('./src/services/invoicing.service.js');
+    
+    const invoices = await generateMonthlyInvoices(year, month);
+    
+    res.json({
+      success: true,
+      data: invoices,
+      message: `${invoices.length} factures générées`
+    });
+  } catch (error) {
+    console.error('❌ Erreur génération factures:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Récupérer factures
+app.get('/api/invoices', async (req, res) => {
+  try {
+    const { getInvoices } = await import('./src/services/invoicing.service.js');
+    const invoices = await getInvoices(req.query);
+    
+    res.json({
+      success: true,
+      data: invoices
+    });
+  } catch (error) {
+    console.error('❌ Erreur récupération factures:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Marquer facture comme payée
+app.post('/api/invoices/:id/pay', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { markAsPaid } = await import('./src/services/invoicing.service.js');
+    
+    const invoice = await markAsPaid(id, req.body);
+    
+    res.json({
+      success: true,
+      data: invoice,
+      message: 'Facture marquée comme payée'
+    });
+  } catch (error) {
+    console.error('❌ Erreur marquage paiement:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Statistiques facturation
+app.get('/api/invoices/stats', async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    const { getInvoiceStats } = await import('./src/services/invoicing.service.js');
+    
+    const stats = await getInvoiceStats(parseInt(year), month ? parseInt(month) : null);
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('❌ Erreur stats facturation:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==================== PRÉVISIONS ====================
+
+// Calculer prévisions
+app.get('/api/analytics/forecasts', async (req, res) => {
+  try {
+    const { months = 6 } = req.query;
+    const { calculateForecasts } = await import('./src/services/forecasting.service.js');
+    
+    const forecasts = await calculateForecasts(parseInt(months));
+    
+    res.json({
+      success: true,
+      data: forecasts
+    });
+  } catch (error) {
+    console.error('❌ Erreur calcul prévisions:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Calculer break-even
+app.get('/api/analytics/break-even', async (req, res) => {
+  try {
+    const { calculateBreakEven } = await import('./src/services/forecasting.service.js');
+    
+    const breakEven = await calculateBreakEven();
+    
+    res.json({
+      success: true,
+      data: breakEven
+    });
+  } catch (error) {
+    console.error('❌ Erreur calcul break-even:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Calculer ROI sites
+app.get('/api/analytics/roi', async (req, res) => {
+  try {
+    const { calculateSiteROI } = await import('./src/services/forecasting.service.js');
+    
+    const roi = await calculateSiteROI();
+    
+    res.json({
+      success: true,
+      data: roi
+    });
+  } catch (error) {
+    console.error('❌ Erreur calcul ROI:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('🛑 SIGTERM reçu, fermeture...');

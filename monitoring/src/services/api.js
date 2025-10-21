@@ -108,6 +108,45 @@ export const monitoringApi = {
     return response.data;
   },
 
+  // Facturation
+  generateInvoices: async (year, month) => {
+    const response = await api.post('/invoices/generate', { year, month });
+    return response.data;
+  },
+
+  getInvoices: async (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    const response = await api.get(`/invoices?${params}`);
+    return response.data;
+  },
+
+  markInvoiceAsPaid: async (invoiceId, paymentData = {}) => {
+    const response = await api.post(`/invoices/${invoiceId}/pay`, paymentData);
+    return response.data;
+  },
+
+  getInvoiceStats: async (year, month) => {
+    const params = new URLSearchParams({ year, ...(month && { month }) }).toString();
+    const response = await api.get(`/invoices/stats?${params}`);
+    return response.data;
+  },
+
+  // Prévisions
+  getForecasts: async (months = 6) => {
+    const response = await api.get(`/analytics/forecasts?months=${months}`);
+    return response.data;
+  },
+
+  getBreakEven: async () => {
+    const response = await api.get('/analytics/break-even');
+    return response.data;
+  },
+
+  getSiteROI: async () => {
+    const response = await api.get('/analytics/roi');
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');
