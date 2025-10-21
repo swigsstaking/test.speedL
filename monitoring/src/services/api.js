@@ -88,6 +88,11 @@ export const monitoringApi = {
     return response.data;
   },
 
+  recalculatePrices: async (options = {}) => {
+    const response = await api.post('/analytics/recalculate-prices', options);
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');

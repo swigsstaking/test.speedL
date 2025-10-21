@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X, RefreshCw, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { monitoringApi } from '../services/api';
@@ -40,6 +40,14 @@ const FinancialAnalytics = () => {
     },
   });
 
+  // Mutation pour recalculer prix suggérés
+  const recalculatePricesMutation = useMutation({
+    mutationFn: monitoringApi.recalculatePrices,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['financial-analytics']);
+    },
+  });
+
   // Données pour graphiques
   const revenueVsCostData = [
     { name: 'Revenus', value: summary.monthlyRevenue || 0, color: '#10b981' },
@@ -56,9 +64,19 @@ const FinancialAnalytics = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Analytics Financiers</h2>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">Vue d'ensemble des revenus, coûts et marges</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Analytics Financiers</h2>
+          <p className="text-slate-500 dark:text-slate-400 mt-1">Vue d'ensemble des revenus, coûts et marges</p>
+        </div>
+        <button
+          onClick={() => recalculatePricesMutation.mutate({ period: '30d', marginPercent: 20 })}
+          disabled={recalculatePricesMutation.isPending}
+          className="btn-secondary flex items-center gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${recalculatePricesMutation.isPending ? 'animate-spin' : ''}`} />
+          {recalculatePricesMutation.isPending ? 'Calcul...' : 'Recalculer Prix'}
+        </button>
       </div>
 
       {/* Summary Cards */}
@@ -430,6 +448,7 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave }) => {
     actualPrice: site.actualPrice || 0,
     monthlyCost: site.monthlyCost || 0,
   });
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   if (isEditing) {
     return (
@@ -479,29 +498,77 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave }) => {
     );
   }
 
+  const breakdown = site.suggestedBreakdown || {};
+
   return (
-    <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30">
-      <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">{site.siteId}</td>
-      <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-400">{site.suggestedPrice?.toFixed(2) || '0.00'}</td>
-      <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">{site.actualPrice?.toFixed(2) || '0.00'}</td>
-      <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-400">{site.monthlyCost?.toFixed(2) || '0.00'}</td>
-      <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">{site.monthlyProfit?.toFixed(2) || '0.00'}</td>
-      <td className="py-3 px-4 text-right font-bold">
-        <span className={
-          site.profitMargin >= 30 ? 'text-emerald-600' :
-          site.profitMargin >= 15 ? 'text-amber-600' : 'text-red-600'
-        }>
-          {site.profitMargin?.toFixed(1) || '0.0'}%
-        </span>
-      </td>
-      <td className="py-3 px-4">
-        <div className="flex items-center justify-center">
-          <button onClick={onEdit} className="p-1 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded">
-            <Edit2 className="w-4 h-4" />
-          </button>
-        </div>
-      </td>
-    </tr>
+    <>
+      <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+        <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">{site.siteId}</td>
+        <td className="py-3 px-4 text-right">
+          <div className="flex items-center justify-end gap-2">
+            <span className="text-slate-600 dark:text-slate-400">{site.suggestedPrice?.toFixed(2) || '0.00'}</span>
+            {site.suggestedPrice > 0 && (
+              <button
+                onClick={() => setShowBreakdown(!showBreakdown)}
+                className="p-1 text-slate-400 hover:text-primary-600 transition-colors"
+                title="Voir détails"
+              >
+                <Info className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </td>
+        <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">{site.actualPrice?.toFixed(2) || '0.00'}</td>
+        <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-400">{site.monthlyCost?.toFixed(2) || '0.00'}</td>
+        <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">{site.monthlyProfit?.toFixed(2) || '0.00'}</td>
+        <td className="py-3 px-4 text-right font-bold">
+          <span className={
+            site.profitMargin >= 30 ? 'text-emerald-600' :
+            site.profitMargin >= 15 ? 'text-amber-600' : 'text-red-600'
+          }>
+            {site.profitMargin?.toFixed(1) || '0.0'}%
+          </span>
+        </td>
+        <td className="py-3 px-4">
+          <div className="flex items-center justify-center">
+            <button onClick={onEdit} className="p-1 text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded">
+              <Edit2 className="w-4 h-4" />
+            </button>
+          </div>
+        </td>
+      </tr>
+      {showBreakdown && (
+        <tr className="bg-slate-50 dark:bg-slate-700/30 border-b border-slate-200 dark:border-slate-700">
+          <td colSpan="7" className="py-3 px-4">
+            <div className="text-sm">
+              <div className="font-medium text-slate-700 dark:text-slate-300 mb-2">Détail du prix suggéré :</div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400">Part serveur:</span>
+                  <span className="ml-2 font-medium text-slate-900 dark:text-slate-100">{breakdown.serverShare?.toFixed(2) || '0.00'} CHF</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400">Bande passante:</span>
+                  <span className="ml-2 font-medium text-slate-900 dark:text-slate-100">{breakdown.bandwidth?.toFixed(2) || '0.00'} CHF</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400">Stockage:</span>
+                  <span className="ml-2 font-medium text-slate-900 dark:text-slate-100">{breakdown.storage?.toFixed(2) || '0.00'} CHF</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400">Requêtes:</span>
+                  <span className="ml-2 font-medium text-slate-900 dark:text-slate-100">{breakdown.requests?.toFixed(2) || '0.00'} CHF</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400">Marge:</span>
+                  <span className="ml-2 font-medium text-emerald-600">{breakdown.margin || 20}%</span>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 };
 

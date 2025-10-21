@@ -751,6 +751,10 @@ app.put('/api/sites/:siteId/pricing', async (req, res) => {
 // Vue d'ensemble financière (Analytics)
 app.get('/api/analytics/financial', async (req, res) => {
   try {
+    // Mettre à jour les prix suggérés avant de récupérer les données
+    const { updateAllSuggestedPrices } = await import('./src/services/pricing.service.js');
+    await updateAllSuggestedPrices({ period: '30d', marginPercent: 20 });
+    
     // Récupérer tous les coûts serveurs
     const serverCosts = await ServerCost.find();
     const totalServerCosts = serverCosts.reduce((sum, s) => sum + s.totalMonthly, 0);
@@ -791,6 +795,28 @@ app.get('/api/analytics/financial', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Erreur récupération analytics financiers:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Recalculer prix suggérés manuellement
+app.post('/api/analytics/recalculate-prices', async (req, res) => {
+  try {
+    const { period = '30d', marginPercent = 20 } = req.body;
+    const { updateAllSuggestedPrices } = await import('./src/services/pricing.service.js');
+    
+    const results = await updateAllSuggestedPrices({ period, marginPercent });
+    
+    res.json({
+      success: true,
+      data: {
+        count: results.length,
+        sites: results
+      },
+      message: `${results.length} prix suggérés recalculés`
+    });
+  } catch (error) {
+    console.error('❌ Erreur recalcul prix suggérés:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
