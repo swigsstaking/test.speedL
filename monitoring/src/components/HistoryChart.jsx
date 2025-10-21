@@ -21,14 +21,33 @@ const HistoryChart = ({ serverId, metric = 'cpu', title }) => {
   ];
 
   // Transformer les données pour le graphique
-  const chartData = serverData?.data?.metrics?.map(m => ({
-    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
-    }),
-    value: metric === 'cpu' ? m.metrics?.cpu?.usage || 0 : m.metrics?.ram?.percent || 0
-  })) || [];
+  const chartData = serverData?.data?.metrics?.map(m => {
+    const date = new Date(m.timestamp);
+    let timeLabel;
+    
+    if (period === '30d') {
+      // Pour 30 jours : afficher juste la date
+      timeLabel = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+    } else if (period === '7d') {
+      // Pour 7 jours : afficher date + heure
+      timeLabel = date.toLocaleDateString('fr-FR', { 
+        day: '2-digit', 
+        month: '2-digit',
+        hour: '2-digit'
+      });
+    } else {
+      // Pour 1h et 24h : afficher juste l'heure
+      timeLabel = date.toLocaleTimeString('fr-FR', { 
+        hour: '2-digit', 
+        minute: '2-digit'
+      });
+    }
+    
+    return {
+      time: timeLabel,
+      value: metric === 'cpu' ? m.metrics?.cpu?.usage || 0 : m.metrics?.ram?.percent || 0
+    };
+  }) || [];
 
   const color = metric === 'cpu' ? '#0ea5e9' : '#10b981';
 
