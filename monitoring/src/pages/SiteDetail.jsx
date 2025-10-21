@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Globe, Wifi, TrendingUp, Clock, AlertCircle, CheckCircle, Shield, Calendar } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { ArrowLeft, Globe, Wifi, TrendingUp, Clock, AlertCircle, CheckCircle, Shield, Calendar, Zap, RefreshCw } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import { monitoringApi } from '../services/api';
@@ -25,7 +25,22 @@ const SiteDetail = () => {
     refetchInterval: 60000,
   });
 
+  const { data: pageSpeedData, refetch: refetchPageSpeed } = useQuery({
+    queryKey: ['pagespeed', siteId],
+    queryFn: () => monitoringApi.getPageSpeedHistory(siteId, '7d', 'mobile'),
+    enabled: !!siteId,
+    refetchInterval: 300000, // 5 minutes
+  });
+
+  const measurePageSpeedMutation = useMutation({
+    mutationFn: (strategy) => monitoringApi.measurePageSpeed(siteId, strategy),
+    onSuccess: () => {
+      refetchPageSpeed();
+    }
+  });
+
   const site = sitesData?.data?.find(s => s.id === siteId);
+  const pageSpeed = pageSpeedData?.data?.latest;
 
   const periods = [
     { value: '1h', label: '1h', points: 12 },
@@ -86,6 +101,91 @@ const SiteDetail = () => {
           )}
         </span>
       </div>
+
+      {/* PageSpeed Performance */}
+      {pageSpeed && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card"
+        >
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-500" />
+              <h3 className="card-title">Performance Réelle (PageSpeed)</h3>
+            </div>
+            <button
+              onClick={() => measurePageSpeedMutation.mutate('mobile')}
+              disabled={measurePageSpeedMutation.isPending}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${measurePageSpeedMutation.isPending ? 'animate-spin' : ''}`} />
+              {measurePageSpeedMutation.isPending ? 'Mesure...' : 'Mesurer'}
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {/* Score Global */}
+            <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+              <div className={`text-4xl font-bold ${
+                pageSpeed.performanceScore >= 90 ? 'text-emerald-600' :
+                pageSpeed.performanceScore >= 50 ? 'text-amber-600' : 'text-red-600'
+              }`}>
+                {pageSpeed.performanceScore}
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Score</div>
+            </div>
+            
+            {/* Temps de chargement */}
+            <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+              <div className={`text-2xl font-bold ${
+                pageSpeed.loadTime <= 2 ? 'text-emerald-600' :
+                pageSpeed.loadTime <= 3 ? 'text-amber-600' : 'text-red-600'
+              }`}>
+                {pageSpeed.loadTime.toFixed(2)}s
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">Chargement</div>
+            </div>
+            
+            {/* LCP */}
+            <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+              <div className={`text-2xl font-bold ${
+                pageSpeed.lcp <= 2500 ? 'text-emerald-600' :
+                pageSpeed.lcp <= 4000 ? 'text-amber-600' : 'text-red-600'
+              }`}>
+                {(pageSpeed.lcp / 1000).toFixed(1)}s
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">LCP</div>
+            </div>
+            
+            {/* FID */}
+            <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+              <div className={`text-2xl font-bold ${
+                pageSpeed.fid <= 100 ? 'text-emerald-600' :
+                pageSpeed.fid <= 300 ? 'text-amber-600' : 'text-red-600'
+              }`}>
+                {pageSpeed.fid}ms
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">FID</div>
+            </div>
+            
+            {/* CLS */}
+            <div className="text-center p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+              <div className={`text-2xl font-bold ${
+                pageSpeed.cls <= 0.1 ? 'text-emerald-600' :
+                pageSpeed.cls <= 0.25 ? 'text-amber-600' : 'text-red-600'
+              }`}>
+                {pageSpeed.cls}
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">CLS</div>
+            </div>
+          </div>
+          
+          <div className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+            Dernière mesure : {new Date(pageSpeed.timestamp).toLocaleString('fr-FR')} • Mobile
+          </div>
+        </motion.div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

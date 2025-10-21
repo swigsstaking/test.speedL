@@ -34,6 +34,18 @@ export const monitoringApi = {
     return response.data;
   },
 
+  // Mesurer PageSpeed d'un site
+  measurePageSpeed: async (siteId, strategy = 'mobile') => {
+    const response = await api.post(`/sites/${siteId}/pagespeed`, { strategy });
+    return response.data;
+  },
+
+  // Récupérer historique PageSpeed
+  getPageSpeedHistory: async (siteId, period = '7d', strategy = 'mobile') => {
+    const response = await api.get(`/sites/${siteId}/pagespeed?period=${period}&strategy=${strategy}`);
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/health');

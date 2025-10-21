@@ -6,6 +6,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import ServerMetric from './src/models/ServerMetric.js';
 import SiteMetric from './src/models/SiteMetric.js';
+import PageSpeedMetric from './src/models/PageSpeedMetric.js';
 
 dotenv.config();
 
@@ -198,6 +199,102 @@ app.get('/api/servers/:serverId', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Erreur récupération serveur:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Mesurer les performances PageSpeed d'un site
+app.post('/api/sites/:siteId/pagespeed', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const { strategy = 'mobile' } = req.body;
+    
+    console.log(`📊 Démarrage mesure PageSpeed pour ${siteId} (${strategy})...`);
+    
+    // Récupérer l'URL du site
+    const axios = (await import('axios')).default;
+    let siteUrl;
+    
+    try {
+      const backendResponse = await axios.get('http://localhost:3000/api/sites', { timeout: 3000 });
+      const site = backendResponse.data?.data?.find(s => s.slug === siteId);
+      
+      if (site) {
+        const domain = site.domains?.[0] || `${site.slug.replace(/-/g, '')}.${site.domain}`;
+        siteUrl = `https://${domain}`;
+      } else {
+        siteUrl = `https://${siteId}.swigs.online`;
+      }
+    } catch {
+      siteUrl = `https://${siteId}.swigs.online`;
+    }
+    
+    // Mesurer avec PageSpeed
+    const { measurePageSpeed } = await import('./src/services/pagespeed.service.js');
+    const result = await measurePageSpeed(siteUrl, strategy);
+    
+    if (result.success) {
+      // Sauvegarder dans MongoDB
+      await PageSpeedMetric.create({
+        siteId,
+        url: siteUrl,
+        strategy,
+        ...result.metrics
+      });
+      
+      console.log(`✅ PageSpeed sauvegardé pour ${siteId}`);
+    }
+    
+    res.json(result);
+  } catch (error) {
+    console.error('❌ Erreur mesure PageSpeed:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Récupérer l'historique PageSpeed d'un site
+app.get('/api/sites/:siteId/pagespeed', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const { period = '7d', strategy = 'mobile' } = req.query;
+    
+    const now = Date.now();
+    let startDate;
+    
+    switch (period) {
+      case '24h':
+        startDate = new Date(now - 24 * 60 * 60 * 1000);
+        break;
+      case '7d':
+        startDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        startDate = new Date(now - 30 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    }
+    
+    const metrics = await PageSpeedMetric.find({
+      siteId,
+      strategy,
+      timestamp: { $gte: startDate }
+    }).sort({ timestamp: -1 }).limit(50);
+    
+    // Récupérer la dernière métrique
+    const latest = metrics[0] || null;
+    
+    res.json({
+      success: true,
+      data: {
+        siteId,
+        strategy,
+        latest,
+        history: metrics
+      }
+    });
+  } catch (error) {
+    console.error('❌ Erreur récupération PageSpeed:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
