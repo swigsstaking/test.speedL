@@ -11,6 +11,7 @@ const SiteDetail = () => {
   const { siteId } = useParams();
   const navigate = useNavigate();
   const [period, setPeriod] = useState('24h');
+  const [pageSpeedStrategy, setPageSpeedStrategy] = useState('mobile');
 
   const { data: sitesData } = useQuery({
     queryKey: ['sites'],
@@ -26,8 +27,8 @@ const SiteDetail = () => {
   });
 
   const { data: pageSpeedData, refetch: refetchPageSpeed } = useQuery({
-    queryKey: ['pagespeed', siteId],
-    queryFn: () => monitoringApi.getPageSpeedHistory(siteId, '7d', 'mobile'),
+    queryKey: ['pagespeed', siteId, pageSpeedStrategy],
+    queryFn: () => monitoringApi.getPageSpeedHistory(siteId, '7d', pageSpeedStrategy),
     enabled: !!siteId,
     refetchInterval: 300000, // 5 minutes
   });
@@ -40,7 +41,7 @@ const SiteDetail = () => {
   });
 
   const measurePageSpeedMutation = useMutation({
-    mutationFn: (strategy) => monitoringApi.measurePageSpeed(siteId, strategy),
+    mutationFn: () => monitoringApi.measurePageSpeed(siteId, pageSpeedStrategy),
     onSuccess: (data) => {
       console.log('✅ PageSpeed mesure réussie:', data);
       refetchPageSpeed();
@@ -86,25 +87,25 @@ const SiteDetail = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <button
           onClick={() => navigate('/sites')}
           className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
         </button>
-        <div className="flex-1">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{site.name}</h2>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 truncate">{site.name}</h2>
           <a 
             href={site.url} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-primary-600 hover:text-primary-700 hover:underline mt-1 inline-block"
+            className="text-primary-600 hover:text-primary-700 hover:underline mt-1 inline-block text-sm sm:text-base break-all"
           >
             {site.url}
           </a>
         </div>
-        <span className={`status-badge ${
+        <span className={`status-badge whitespace-nowrap ${
           site.status === 'online' ? 'status-online' : 'status-offline'
         }`}>
           {site.status === 'online' ? (
@@ -121,22 +122,46 @@ const SiteDetail = () => {
         animate={{ opacity: 1, y: 0 }}
         className="card"
       >
-        <div className="card-header">
+        <div className="flex flex-col gap-4 mb-6">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-amber-500" />
-            <h3 className="card-title">Performance Réelle (PageSpeed)</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Performance Réelle (PageSpeed)</h3>
           </div>
-          <button
-            onClick={() => {
-              console.log('🔍 Lancement mesure PageSpeed pour:', siteId);
-              measurePageSpeedMutation.mutate('mobile');
-            }}
-            disabled={measurePageSpeedMutation.isPending}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${measurePageSpeedMutation.isPending ? 'animate-spin' : ''}`} />
-            {measurePageSpeedMutation.isPending ? 'Mesure en cours...' : 'Mesurer'}
-          </button>
+          <div className="flex items-center gap-2 flex-wrap justify-between">
+            <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+              <button
+                onClick={() => setPageSpeedStrategy('mobile')}
+                className={`px-3 py-1 text-sm rounded transition-colors ${
+                  pageSpeedStrategy === 'mobile'
+                    ? 'bg-white dark:bg-slate-600 text-primary-600 dark:text-primary-400 font-medium shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                📱 Mobile
+              </button>
+              <button
+                onClick={() => setPageSpeedStrategy('desktop')}
+                className={`px-3 py-1 text-sm rounded transition-colors ${
+                  pageSpeedStrategy === 'desktop'
+                    ? 'bg-white dark:bg-slate-600 text-primary-600 dark:text-primary-400 font-medium shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                💻 Desktop
+              </button>
+            </div>
+            <button
+              onClick={() => {
+                console.log('🔍 Lancement mesure PageSpeed pour:', siteId, pageSpeedStrategy);
+                measurePageSpeedMutation.mutate();
+              }}
+              disabled={measurePageSpeedMutation.isPending}
+              className="btn-secondary flex items-center gap-2 whitespace-nowrap"
+            >
+              <RefreshCw className={`w-4 h-4 ${measurePageSpeedMutation.isPending ? 'animate-spin' : ''}`} />
+              {measurePageSpeedMutation.isPending ? 'Mesure...' : 'Mesurer'}
+            </button>
+          </div>
         </div>
         
         {pageSpeed ? (
@@ -199,7 +224,7 @@ const SiteDetail = () => {
           </div>
           
           <div className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-            Dernière mesure : {new Date(pageSpeed.timestamp).toLocaleString('fr-FR')} • Mobile
+            Dernière mesure : {new Date(pageSpeed.timestamp).toLocaleString('fr-FR')} • {pageSpeed.strategy === 'mobile' ? '📱 Mobile' : '💻 Desktop'}
           </div>
           </>
         ) : (

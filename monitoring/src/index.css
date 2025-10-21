@@ -10,6 +10,7 @@
   body {
     @apply bg-slate-50 text-slate-900 antialiased;
     @apply dark:bg-slate-900 dark:text-slate-100;
+    @apply overflow-x-hidden;
   }
 
   /* CSS Variables pour tooltips des graphiques */
@@ -23,6 +24,11 @@
     --tooltip-bg: #1e293b;
     --tooltip-border: #475569;
     --tooltip-text: #f1f5f9;
+  }
+
+  /* Responsive: éviter débordements */
+  #root {
+    @apply w-full overflow-x-hidden;
   }
 }
 

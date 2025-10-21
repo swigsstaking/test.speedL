@@ -125,7 +125,7 @@ const Sites = () => {
                   <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Requêtes/24h</span>
                 </div>
                 <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                  {(site.requests / 1000).toFixed(0)}k
+                  {site.requests >= 1000 ? `${(site.requests / 1000).toFixed(1)}k` : site.requests}
                 </div>
               </div>
 

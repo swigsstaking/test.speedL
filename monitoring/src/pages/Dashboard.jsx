@@ -68,6 +68,11 @@ const Dashboard = () => {
     ? Math.round(servers.reduce((sum, s) => sum + (s.metrics?.cpu?.usage || 0), 0) / servers.length)
     : 0;
   const onlineSites = sites.filter(s => s.status === 'online').length;
+  
+  // Calculer uptime global (moyenne de tous les sites)
+  const globalUptime = sites.length > 0
+    ? ((onlineSites / sites.length) * 100).toFixed(1)
+    : '0.0';
 
   const stats = [
     {
@@ -93,7 +98,7 @@ const Dashboard = () => {
     },
     {
       label: 'Uptime Global',
-      value: '99.9%',
+      value: `${globalUptime}%`,
       change: '+0.1%',
       icon: Activity,
       color: 'emerald',
