@@ -76,12 +76,14 @@ const HistoryChart = ({ serverId, metric = 'cpu', title }) => {
             <YAxis stroke="#64748b" fontSize={12} domain={[0, 100]} />
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: '#ffffff', 
-                border: '1px solid #e2e8f0',
+                backgroundColor: 'var(--tooltip-bg, #ffffff)', 
+                border: '1px solid var(--tooltip-border, #e2e8f0)',
                 borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                color: 'var(--tooltip-text, #1e293b)'
               }}
               formatter={(value) => `${value.toFixed(1)}%`}
+              labelStyle={{ color: 'var(--tooltip-text, #1e293b)' }}
             />
             <Area 
               type="monotone" 

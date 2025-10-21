@@ -11,6 +11,19 @@
     @apply bg-slate-50 text-slate-900 antialiased;
     @apply dark:bg-slate-900 dark:text-slate-100;
   }
+
+  /* CSS Variables pour tooltips des graphiques */
+  :root {
+    --tooltip-bg: #ffffff;
+    --tooltip-border: #e2e8f0;
+    --tooltip-text: #1e293b;
+  }
+
+  .dark {
+    --tooltip-bg: #1e293b;
+    --tooltip-border: #475569;
+    --tooltip-text: #f1f5f9;
+  }
 }
 
 @layer components {

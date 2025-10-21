@@ -48,9 +48,10 @@ const DynamicLineChart = ({
         <YAxis stroke="#64748b" fontSize={12} domain={yDomain} />
         <Tooltip 
           contentStyle={{ 
-            backgroundColor: '#ffffff', 
-            border: '1px solid #e2e8f0',
+            backgroundColor: 'var(--tooltip-bg, #ffffff)', 
+            border: '1px solid var(--tooltip-border, #e2e8f0)',
             borderRadius: '8px',
+            color: 'var(--tooltip-text, #1e293b)'
           }}
           formatter={(value) => {
             const color = getColor(value);
@@ -59,7 +60,7 @@ const DynamicLineChart = ({
               dataKey === 'latency' ? 'Latence' : 'Valeur'
             ];
           }}
-          labelStyle={{ fontWeight: 'bold' }}
+          labelStyle={{ fontWeight: 'bold', color: 'var(--tooltip-text, #1e293b)' }}
         />
         
         {/* Lignes de référence pour les seuils */}

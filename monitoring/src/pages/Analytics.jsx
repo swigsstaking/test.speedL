@@ -173,12 +173,14 @@ const Analytics = () => {
               <YAxis stroke="#64748b" fontSize={12} />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: '#ffffff', 
-                  border: '1px solid #e2e8f0',
+                  backgroundColor: 'var(--tooltip-bg, #ffffff)', 
+                  border: '1px solid var(--tooltip-border, #e2e8f0)',
                   borderRadius: '8px',
-                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  color: 'var(--tooltip-text, #1e293b)'
                 }}
                 formatter={(value) => `${value.toFixed(2)} CHF`}
+                labelStyle={{ color: 'var(--tooltip-text, #1e293b)' }}
               />
               <Bar dataKey="cpu" stackId="a" fill="#0ea5e9" name="CPU" />
               <Bar dataKey="ram" stackId="a" fill="#10b981" name="RAM" />
@@ -217,12 +219,14 @@ const Analytics = () => {
                 </Pie>
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#ffffff', 
-                    border: '1px solid #e2e8f0',
+                    backgroundColor: 'var(--tooltip-bg, #ffffff)', 
+                    border: '1px solid var(--tooltip-border, #e2e8f0)',
                     borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                    color: 'var(--tooltip-text, #1e293b)'
                   }}
                   formatter={(value) => `${value}%`}
+                  labelStyle={{ color: 'var(--tooltip-text, #1e293b)' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -261,11 +265,13 @@ const Analytics = () => {
             <YAxis yAxisId="right" orientation="right" stroke="#64748b" fontSize={12} label={{ value: 'CHF', angle: 90, position: 'insideRight' }} />
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: '#ffffff', 
-                border: '1px solid #e2e8f0',
+                backgroundColor: 'var(--tooltip-bg, #ffffff)', 
+                border: '1px solid var(--tooltip-border, #e2e8f0)',
                 borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                color: 'var(--tooltip-text, #1e293b)'
               }}
+              labelStyle={{ color: 'var(--tooltip-text, #1e293b)' }}
             />
             <Line 
               yAxisId="left"
