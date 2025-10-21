@@ -104,6 +104,39 @@ const FinancialAnalytics = () => {
     Profit: m.totalProfit || 0,
   }));
 
+  // Données pour graphique prévisions (historique + prévisions)
+  const forecastChartData = [
+    ...monthlyHistory.slice(-6).map(m => ({
+      name: `${m.month}/${m.year}`,
+      Revenus: m.totalRevenue || 0,
+      Profit: m.totalProfit || 0,
+      type: 'historique'
+    })),
+    ...forecasts.map(f => ({
+      name: f.monthName,
+      Revenus: f.revenue,
+      Profit: f.profit,
+      type: 'prévision',
+      confidence: f.confidence
+    }))
+  ];
+
+  // Mutation pour générer factures
+  const generateInvoicesMutation = useMutation({
+    mutationFn: ({ year, month }) => monitoringApi.generateInvoices(year, month),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['invoices']);
+    },
+  });
+
+  // Mutation pour marquer facture payée
+  const markPaidMutation = useMutation({
+    mutationFn: ({ invoiceId, paymentData }) => monitoringApi.markInvoiceAsPaid(invoiceId, paymentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['invoices']);
+    },
+  });
+
   if (isLoading) {
     return <div className="text-center py-12">Chargement...</div>;
   }
@@ -437,6 +470,187 @@ const FinancialAnalytics = () => {
             </tbody>
           </table>
         </div>
+      </motion.div>
+
+      {/* Prévisions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+        className="card"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary-600" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Prévisions 6 Mois</h3>
+          </div>
+          {forecastsData?.data?.trend && (
+            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+              forecastsData.data.trend === 'growing' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' :
+              forecastsData.data.trend === 'declining' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+              'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+            }`}>
+              {forecastsData.data.trend === 'growing' ? '📈 Croissance' :
+               forecastsData.data.trend === 'declining' ? '📉 Déclin' : '➡️ Stable'}
+            </div>
+          )}
+        </div>
+
+        {forecasts.length > 0 ? (
+          <>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={forecastChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#64748b" />
+                <YAxis stroke="#64748b" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--tooltip-bg)',
+                    border: '1px solid var(--tooltip-border)',
+                    borderRadius: '8px',
+                    color: 'var(--tooltip-text)'
+                  }}
+                  formatter={(value, name, props) => {
+                    const confidence = props.payload.confidence;
+                    return [
+                      `${value.toFixed(2)} CHF${confidence ? ` (${confidence}% confiance)` : ''}`,
+                      name
+                    ];
+                  }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="Revenus" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  strokeDasharray={(entry) => entry.type === 'prévision' ? '5 5' : '0'}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="Profit" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  strokeDasharray={(entry) => entry.type === 'prévision' ? '5 5' : '0'}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+              {forecasts.slice(0, 3).map((forecast) => (
+                <div key={`${forecast.year}-${forecast.month}`} className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{forecast.monthName}</div>
+                  <div className="text-lg font-bold text-slate-900 dark:text-slate-100">{forecast.revenue.toFixed(0)} CHF</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">
+                    Profit: <span className={forecast.profit >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                      {forecast.profit >= 0 ? '+' : ''}{forecast.profit.toFixed(0)} CHF
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Confiance: {forecast.confidence}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-8">
+            Pas assez de données historiques pour générer des prévisions (minimum 3 mois)
+          </p>
+        )}
+      </motion.div>
+
+      {/* Facturation */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9 }}
+        className="card"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary-600" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Facturation</h3>
+          </div>
+          <button
+            onClick={() => generateInvoicesMutation.mutate({ year: now.getFullYear(), month: now.getMonth() + 1 })}
+            disabled={generateInvoicesMutation.isPending}
+            className="btn-secondary flex items-center gap-2 text-sm"
+          >
+            <Calendar className="w-4 h-4" />
+            {generateInvoicesMutation.isPending ? 'Génération...' : 'Générer Factures Mois'}
+          </button>
+        </div>
+
+        {invoices.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-700">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">N° Facture</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Site</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Période</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Montant HT</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">TVA</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Total TTC</th>
+                  <th className="text-center py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Statut</th>
+                  <th className="text-center py-3 px-4 text-sm font-medium text-slate-600 dark:text-slate-400">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.map((invoice) => (
+                  <tr key={invoice._id} className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                    <td className="py-3 px-4 font-mono text-sm text-slate-900 dark:text-slate-100">{invoice.invoiceNumber}</td>
+                    <td className="py-3 px-4 text-slate-900 dark:text-slate-100">{invoice.siteName}</td>
+                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{invoice.period.month}/{invoice.period.year}</td>
+                    <td className="py-3 px-4 text-right text-slate-900 dark:text-slate-100">{invoice.amount.toFixed(2)} CHF</td>
+                    <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-400">{invoice.taxAmount.toFixed(2)} CHF</td>
+                    <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">{invoice.totalAmount.toFixed(2)} CHF</td>
+                    <td className="py-3 px-4 text-center">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        invoice.status === 'paid' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' :
+                        invoice.status === 'sent' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                        invoice.status === 'overdue' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                        'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {invoice.status === 'paid' ? '✓ Payée' :
+                         invoice.status === 'sent' ? '📤 Envoyée' :
+                         invoice.status === 'overdue' ? '⚠️ Retard' : '📝 Brouillon'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {invoice.status !== 'paid' && (
+                        <button
+                          onClick={() => markPaidMutation.mutate({ 
+                            invoiceId: invoice._id, 
+                            paymentData: { paidDate: new Date() }
+                          })}
+                          disabled={markPaidMutation.isPending}
+                          className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+                        >
+                          Marquer payée
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Aucune facture pour ce mois
+            </p>
+            <button
+              onClick={() => generateInvoicesMutation.mutate({ year: now.getFullYear(), month: now.getMonth() + 1 })}
+              disabled={generateInvoicesMutation.isPending}
+              className="btn-primary"
+            >
+              Générer les factures
+            </button>
+          </div>
+        )}
       </motion.div>
     </div>
   );
