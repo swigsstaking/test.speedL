@@ -34,8 +34,13 @@ const SiteDetail = () => {
 
   const measurePageSpeedMutation = useMutation({
     mutationFn: (strategy) => monitoringApi.measurePageSpeed(siteId, strategy),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ PageSpeed mesure réussie:', data);
       refetchPageSpeed();
+    },
+    onError: (error) => {
+      console.error('❌ Erreur PageSpeed:', error);
+      alert(`Erreur lors de la mesure: ${error.message}`);
     }
   });
 
@@ -114,7 +119,10 @@ const SiteDetail = () => {
             <h3 className="card-title">Performance Réelle (PageSpeed)</h3>
           </div>
           <button
-            onClick={() => measurePageSpeedMutation.mutate('mobile')}
+            onClick={() => {
+              console.log('🔍 Lancement mesure PageSpeed pour:', siteId);
+              measurePageSpeedMutation.mutate('mobile');
+            }}
             disabled={measurePageSpeedMutation.isPending}
             className="btn-secondary flex items-center gap-2"
           >

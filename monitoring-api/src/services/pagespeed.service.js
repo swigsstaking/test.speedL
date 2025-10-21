@@ -16,6 +16,7 @@ const API_KEY = process.env.GOOGLE_PAGESPEED_API_KEY || ''; // Optionnel, mais r
 export async function measurePageSpeed(url, strategy = 'mobile') {
   try {
     console.log(`📊 Mesure PageSpeed pour ${url} (${strategy})...`);
+    console.log(`🔑 API Key présente: ${!!API_KEY}`);
     
     const params = {
       url: url,
@@ -28,10 +29,14 @@ export async function measurePageSpeed(url, strategy = 'mobile') {
       params.key = API_KEY;
     }
     
+    console.log('📡 Requête PageSpeed API avec params:', params);
+    
     const response = await axios.get(PAGESPEED_API_URL, {
       params,
       timeout: 60000 // 60 secondes max
     });
+    
+    console.log('✅ Réponse PageSpeed reçue, status:', response.status);
     
     const lighthouse = response.data.lighthouseResult;
     const audits = lighthouse.audits;
