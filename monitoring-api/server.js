@@ -9,6 +9,8 @@ import ServerMetric from './src/models/ServerMetric.js';
 import PageSpeedMetric from './src/models/PageSpeedMetric.js';
 import ServerCost from './src/models/ServerCost.js';
 import SitePricing from './src/models/SitePricing.js';
+import Invoice from './src/models/Invoice.js';
+import MonthlyFinancial from './src/models/MonthlyFinancial.js';
 
 dotenv.config();
 
