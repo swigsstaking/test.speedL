@@ -474,6 +474,12 @@ app.get('/api/sites/stats/all', async (req, res) => {
       console.log('⚠️ Backend non accessible');
     }
     
+    // Ajouter sites externes
+    sites.push(
+      { slug: 'moontain', domains: ['www.moontain.ch'], external: true },
+      { slug: 'adlr', domains: ['www.adlrcosmeticauto.ch'], external: true }
+    );
+    
     // Calculer date de début
     const now = Date.now();
     let since;
