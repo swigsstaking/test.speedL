@@ -17,10 +17,32 @@ const FinancialAnalytics = () => {
     refetchInterval: 60000,
   });
 
+  // Récupérer la liste des serveurs
+  const { data: serversData } = useQuery({
+    queryKey: ['servers'],
+    queryFn: monitoringApi.getServers,
+    refetchInterval: 30000,
+  });
+
   const financial = financialData?.data || {};
   const summary = financial.summary || {};
-  const servers = financial.servers?.details || [];
+  const serverCosts = financial.servers?.details || [];
   const sites = financial.sites?.details || [];
+
+  // Fusionner serveurs avec leurs coûts
+  const allServers = (serversData?.data || []).map(server => {
+    const cost = serverCosts.find(c => c.serverId === server.serverId) || {
+      serverId: server.serverId,
+      baseCost: 0,
+      electricityCost: 0,
+      networkCost: 0,
+      amortization: 0,
+      otherCharges: 0,
+      totalMonthly: 0,
+      totalYearly: 0
+    };
+    return cost;
+  });
 
   // Mutation pour mettre à jour coûts serveur
   const updateServerCostMutation = useMutation({
@@ -276,7 +298,7 @@ const FinancialAnalytics = () => {
               </tr>
             </thead>
             <tbody>
-              {servers.map((server) => (
+              {allServers.map((server) => (
                 <ServerCostRow
                   key={server.serverId}
                   server={server}
@@ -356,48 +378,48 @@ const ServerCostRow = ({ server, isEditing, onEdit, onCancel, onSave }) => {
     return (
       <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
         <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">{server.serverId}</td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-right">
           <input
             type="number"
             value={formData.baseCost}
             onChange={(e) => setFormData({ ...formData, baseCost: parseFloat(e.target.value) || 0 })}
-            className="w-20 px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
+            className="w-full max-w-[90px] px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
             step="0.01"
           />
         </td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-right">
           <input
             type="number"
             value={formData.electricityCost}
             onChange={(e) => setFormData({ ...formData, electricityCost: parseFloat(e.target.value) || 0 })}
-            className="w-20 px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
+            className="w-full max-w-[90px] px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
             step="0.01"
           />
         </td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-right">
           <input
             type="number"
             value={formData.networkCost}
             onChange={(e) => setFormData({ ...formData, networkCost: parseFloat(e.target.value) || 0 })}
-            className="w-20 px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
+            className="w-full max-w-[90px] px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
             step="0.01"
           />
         </td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-right">
           <input
             type="number"
             value={formData.amortization}
             onChange={(e) => setFormData({ ...formData, amortization: parseFloat(e.target.value) || 0 })}
-            className="w-20 px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
+            className="w-full max-w-[90px] px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
             step="0.01"
           />
         </td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-right">
           <input
             type="number"
             value={formData.otherCharges}
             onChange={(e) => setFormData({ ...formData, otherCharges: parseFloat(e.target.value) || 0 })}
-            className="w-20 px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
+            className="w-full max-w-[90px] px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
             step="0.01"
           />
         </td>
@@ -407,7 +429,7 @@ const ServerCostRow = ({ server, isEditing, onEdit, onCancel, onSave }) => {
         <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-slate-100">
           {((formData.baseCost + formData.electricityCost + formData.networkCost + formData.amortization + formData.otherCharges) * 12).toFixed(2)}
         </td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-center">
           <div className="flex items-center justify-center gap-2">
             <button onClick={() => onSave(formData)} className="p-1 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded">
               <Save className="w-4 h-4" />
@@ -455,21 +477,21 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave }) => {
       <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/50">
         <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">{site.siteId}</td>
         <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-400">{site.suggestedPrice?.toFixed(2) || '0.00'}</td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-right">
           <input
             type="number"
             value={formData.actualPrice}
             onChange={(e) => setFormData({ ...formData, actualPrice: parseFloat(e.target.value) || 0 })}
-            className="w-24 px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
+            className="w-full max-w-[100px] px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
             step="0.01"
           />
         </td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-right">
           <input
             type="number"
             value={formData.monthlyCost}
             onChange={(e) => setFormData({ ...formData, monthlyCost: parseFloat(e.target.value) || 0 })}
-            className="w-24 px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
+            className="w-full max-w-[100px] px-2 py-1 text-sm text-right border rounded dark:bg-slate-800 dark:border-slate-600"
             step="0.01"
           />
         </td>
@@ -484,7 +506,7 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave }) => {
             {formData.actualPrice > 0 ? (((formData.actualPrice - formData.monthlyCost) / formData.actualPrice * 100).toFixed(1)) : '0.0'}%
           </span>
         </td>
-        <td className="py-3 px-4">
+        <td className="py-3 px-4 text-center">
           <div className="flex items-center justify-center gap-2">
             <button onClick={() => onSave(formData)} className="p-1 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded">
               <Save className="w-4 h-4" />
