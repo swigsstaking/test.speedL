@@ -299,9 +299,6 @@ const FinancialAnalytics = () => {
         >
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
             Évolution Mensuelle (12 mois)
-            <span className="ml-3 text-sm font-normal text-slate-500 dark:text-slate-400">
-              Barres rayées = Mois actuel | Barres pleines = Mois passés
-            </span>
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={monthlyChartData} barGap={2} barCategoryGap="15%">
@@ -318,20 +315,23 @@ const FinancialAnalytics = () => {
                 }}
                 formatter={(value) => `${value.toFixed(2)} CHF`}
               />
-              <Legend />
-              <Bar dataKey="Revenus" radius={[4, 4, 0, 0]}>
+              <Legend 
+                iconType="square"
+                wrapperStyle={{ paddingTop: '10px' }}
+              />
+              <Bar dataKey="Revenus" fill="#10b981" radius={[4, 4, 0, 0]}>
                 {monthlyChartData.map((entry, index) => (
                   <Cell 
-                    key={`cell-${index}`} 
+                    key={`cell-rev-${index}`} 
                     fill={entry.isCurrentMonth ? 'url(#revenuePattern)' : '#10b981'} 
                   />
                 ))}
               </Bar>
               <Bar dataKey="Coûts" fill="#ef4444" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Profit" radius={[4, 4, 0, 0]}>
+              <Bar dataKey="Profit" fill="#3b82f6" radius={[4, 4, 0, 0]}>
                 {monthlyChartData.map((entry, index) => (
                   <Cell 
-                    key={`cell-${index}`} 
+                    key={`cell-profit-${index}`} 
                     fill={entry.isCurrentMonth ? 'url(#profitPattern)' : '#3b82f6'} 
                   />
                 ))}
