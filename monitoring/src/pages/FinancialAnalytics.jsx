@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X, RefreshCw, Info, FileText, Calendar, CheckCircle, AlertCircle as AlertCircleIcon, Download, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { monitoringApi } from '../services/api';
-import OverlayBarChart from '../components/OverlayBarChart';
 
 const FinancialAnalytics = () => {
   const queryClient = useQueryClient();
@@ -97,38 +96,15 @@ const FinancialAnalytics = () => {
     },
   });
 
-  // Données pour graphique évolution mensuelle avec projection vs réel
+  // Données pour graphique évolution mensuelle
   const monthlyChartData = monthlyHistory.map(m => {
     const isCurrentMonth = m.year === now.getFullYear() && m.month === (now.getMonth() + 1);
     
-    // Pour le mois en cours, calculer revenus payés vs projetés
-    let paidRevenue = 0;
-    let projectedRevenue = m.totalRevenue || 0;
-    
-    if (isCurrentMonth) {
-      // Calculer revenus déjà payés ce mois
-      const paidInvoices = invoices.filter(inv => inv.status === 'paid');
-      paidRevenue = paidInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-    } else {
-      // Mois passés : tout est considéré comme payé
-      paidRevenue = m.totalRevenue || 0;
-      projectedRevenue = 0; // Pas de projection pour mois passés
-    }
-    
-    const costs = m.totalCosts || 0;
-    const projectedProfit = projectedRevenue - costs;
-    const realProfit = paidRevenue - costs;
-    
     return {
       name: `${m.month}/${m.year}`,
-      // Revenus
-      'Revenus (Projection)': projectedRevenue,
-      'Revenus (Payé)': paidRevenue,
-      // Coûts
-      'Coûts': costs,
-      // Profit
-      'Profit (Projection)': projectedProfit,
-      'Profit (Réel)': realProfit,
+      Revenus: m.totalRevenue || 0,
+      Coûts: m.totalCosts || 0,
+      Profit: m.totalProfit || 0,
       isCurrentMonth
     };
   });
@@ -324,10 +300,52 @@ const FinancialAnalytics = () => {
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
             Évolution Mensuelle (12 mois)
             <span className="ml-3 text-sm font-normal text-slate-500 dark:text-slate-400">
-              Barres rayées = Projection | Barres pleines = Payé (superposées)
+              Barres rayées = Mois actuel | Barres pleines = Mois passés
             </span>
           </h3>
-          <OverlayBarChart data={monthlyChartData} height={300} />
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyChartData} barGap={2} barCategoryGap="15%">
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" stroke="#64748b" />
+              <YAxis stroke="#64748b" />
+              <Tooltip
+                cursor={false}
+                contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}
+                formatter={(value) => `${value.toFixed(2)} CHF`}
+              />
+              <Legend />
+              <Bar dataKey="Revenus" radius={[4, 4, 0, 0]}>
+                {monthlyChartData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.isCurrentMonth ? 'url(#revenuePattern)' : '#10b981'} 
+                  />
+                ))}
+              </Bar>
+              <Bar dataKey="Coûts" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Profit" radius={[4, 4, 0, 0]}>
+                {monthlyChartData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.isCurrentMonth ? 'url(#profitPattern)' : '#3b82f6'} 
+                  />
+                ))}
+              </Bar>
+              <defs>
+                <pattern id="revenuePattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+                  <line x1="0" y1="0" x2="0" y2="8" stroke="#10b981" strokeWidth="4" />
+                </pattern>
+                <pattern id="profitPattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+                  <line x1="0" y1="0" x2="0" y2="8" stroke="#3b82f6" strokeWidth="4" />
+                </pattern>
+              </defs>
+            </BarChart>
+          </ResponsiveContainer>
         </motion.div>
 
         {/* Rentabilité par Serveur */}
