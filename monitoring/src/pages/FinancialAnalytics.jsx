@@ -114,13 +114,20 @@ const FinancialAnalytics = () => {
       projectedRevenue = 0; // Pas de projection pour mois passés
     }
     
+    const costs = m.totalCosts || 0;
+    const projectedProfit = projectedRevenue - costs;
+    const realProfit = paidRevenue - costs;
+    
     return {
       name: `${m.month}/${m.year}`,
-      'Revenus Projetés': projectedRevenue,
-      'Revenus Payés': paidRevenue,
-      'Coûts': m.totalCosts || 0,
-      'Profit Projeté': isCurrentMonth ? (projectedRevenue - (m.totalCosts || 0)) : 0,
-      'Profit Réel': paidRevenue - (m.totalCosts || 0),
+      // Revenus
+      'Revenus (Projection)': projectedRevenue,
+      'Revenus (Payé)': paidRevenue,
+      // Coûts
+      'Coûts': costs,
+      // Profit
+      'Profit (Projection)': projectedProfit,
+      'Profit (Réel)': realProfit,
       isCurrentMonth
     };
   });
@@ -316,11 +323,11 @@ const FinancialAnalytics = () => {
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
             Évolution Mensuelle (12 mois)
             <span className="ml-3 text-sm font-normal text-slate-500 dark:text-slate-400">
-              Barres rayées = Projection | Barres pleines = Payé
+              Bordure pointillée = Projection | Barre pleine = Payé
             </span>
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={monthlyChartData} barGap={2} barCategoryGap="15%">
+            <BarChart data={monthlyChartData} barGap={2} barCategoryGap="15%">
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" stroke="#64748b" />
               <YAxis stroke="#64748b" />
@@ -335,48 +342,16 @@ const FinancialAnalytics = () => {
                 formatter={(value, name) => [`${value.toFixed(2)} CHF`, name]}
               />
               <Legend />
-              {/* Barres projetées (rayées) - en arrière-plan */}
-              <Bar 
-                dataKey="Revenus Projetés" 
-                fill="url(#revenuePattern)" 
-                radius={[4, 4, 0, 0]}
-                barSize={60}
-              />
-              <Bar 
-                dataKey="Profit Projeté" 
-                fill="url(#profitPattern)" 
-                radius={[4, 4, 0, 0]}
-                barSize={60}
-              />
-              {/* Barres réelles (pleines) - EXACTEMENT superposées */}
-              <Bar 
-                dataKey="Revenus Payés" 
-                fill="#10b981" 
-                radius={[4, 4, 0, 0]}
-                barSize={60}
-              />
-              <Bar 
-                dataKey="Coûts" 
-                fill="#ef4444" 
-                radius={[4, 4, 0, 0]}
-                barSize={60}
-              />
-              <Bar 
-                dataKey="Profit Réel" 
-                fill="#3b82f6" 
-                radius={[4, 4, 0, 0]}
-                barSize={60}
-              />
-              {/* Patterns pour barres projetées */}
-              <defs>
-                <pattern id="revenuePattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-                  <line x1="0" y1="0" x2="0" y2="8" stroke="#10b981" strokeWidth="4" />
-                </pattern>
-                <pattern id="profitPattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-                  <line x1="0" y1="0" x2="0" y2="8" stroke="#3b82f6" strokeWidth="4" />
-                </pattern>
-              </defs>
-            </ComposedChart>
+              
+              {/* Barres avec bordure pour projection */}
+              <Bar dataKey="Revenus (Projection)" fill="rgba(16, 185, 129, 0.15)" stroke="#10b981" strokeWidth={2} strokeDasharray="5 5" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Revenus (Payé)" fill="#10b981" radius={[4, 4, 0, 0]} />
+              
+              <Bar dataKey="Coûts" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              
+              <Bar dataKey="Profit (Projection)" fill="rgba(59, 130, 246, 0.15)" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Profit (Réel)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         </motion.div>
 
