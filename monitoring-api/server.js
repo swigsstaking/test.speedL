@@ -995,6 +995,28 @@ app.get('/api/invoices/stats', async (req, res) => {
   }
 });
 
+// Télécharger facture HTML
+app.get('/api/invoices/:id/html', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const invoice = await Invoice.findById(id);
+    
+    if (!invoice) {
+      return res.status(404).json({ success: false, error: 'Facture non trouvée' });
+    }
+    
+    const { generateInvoiceHTML } = await import('./src/services/pdf.service.js');
+    const html = generateInvoiceHTML(invoice);
+    
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Content-Disposition', `inline; filename="${invoice.invoiceNumber}.html"`);
+    res.send(html);
+  } catch (error) {
+    console.error('❌ Erreur génération HTML facture:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ==================== PRÉVISIONS ====================
 
 // Calculer prévisions

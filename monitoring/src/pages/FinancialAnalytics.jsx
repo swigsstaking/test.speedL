@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X, RefreshCw, Info, FileText, Calendar, CheckCircle, AlertCircle as AlertCircleIcon } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Server, Globe, Edit2, Save, X, RefreshCw, Info, FileText, Calendar, CheckCircle, AlertCircle as AlertCircleIcon, Download, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { monitoringApi } from '../services/api';
@@ -96,13 +96,34 @@ const FinancialAnalytics = () => {
     },
   });
 
-  // Données pour graphique évolution mensuelle
-  const monthlyChartData = monthlyHistory.map(m => ({
-    name: `${m.month}/${m.year}`,
-    Revenus: m.totalRevenue || 0,
-    Coûts: m.totalCosts || 0,
-    Profit: m.totalProfit || 0,
-  }));
+  // Données pour graphique évolution mensuelle avec projection vs réel
+  const monthlyChartData = monthlyHistory.map(m => {
+    const isCurrentMonth = m.year === now.getFullYear() && m.month === (now.getMonth() + 1);
+    
+    // Pour le mois en cours, calculer revenus payés vs projetés
+    let paidRevenue = 0;
+    let projectedRevenue = m.totalRevenue || 0;
+    
+    if (isCurrentMonth) {
+      // Calculer revenus déjà payés ce mois
+      const paidInvoices = invoices.filter(inv => inv.status === 'paid');
+      paidRevenue = paidInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+    } else {
+      // Mois passés : tout est considéré comme payé
+      paidRevenue = m.totalRevenue || 0;
+      projectedRevenue = 0; // Pas de projection pour mois passés
+    }
+    
+    return {
+      name: `${m.month}/${m.year}`,
+      'Revenus Projetés': projectedRevenue,
+      'Revenus Payés': paidRevenue,
+      'Coûts': m.totalCosts || 0,
+      'Profit Projeté': isCurrentMonth ? (projectedRevenue - (m.totalCosts || 0)) : 0,
+      'Profit Réel': paidRevenue - (m.totalCosts || 0),
+      isCurrentMonth
+    };
+  });
 
   // Données pour graphique prévisions (historique + prévisions)
   const forecastChartData = [
@@ -284,25 +305,66 @@ const FinancialAnalytics = () => {
           transition={{ delay: 0.4 }}
           className="card"
         >
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Évolution Mensuelle (12 mois)</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">
+            Évolution Mensuelle (12 mois)
+            <span className="ml-3 text-sm font-normal text-slate-500 dark:text-slate-400">
+              Barres rayées = Projection | Barres pleines = Payé
+            </span>
+          </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyChartData} barGap={2} barCategoryGap="15%">
+            <BarChart data={monthlyChartData} barGap={-20} barCategoryGap="20%">
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" stroke="#64748b" />
               <YAxis stroke="#64748b" />
               <Tooltip
+                cursor={false}
                 contentStyle={{
-                  backgroundColor: 'var(--tooltip-bg)',
-                  border: '1px solid var(--tooltip-border)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid #e2e8f0',
                   borderRadius: '8px',
-                  color: 'var(--tooltip-text)'
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                 }}
-                formatter={(value) => `${value.toFixed(2)} CHF`}
+                formatter={(value, name) => [`${value.toFixed(2)} CHF`, name]}
               />
               <Legend />
-              <Bar dataKey="Revenus" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Coûts" fill="#ef4444" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Profit" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              {/* Barres projetées (transparentes/rayées) */}
+              <Bar 
+                dataKey="Revenus Projetés" 
+                fill="url(#revenuePattern)" 
+                radius={[4, 4, 0, 0]}
+                fillOpacity={0.4}
+              />
+              <Bar 
+                dataKey="Profit Projeté" 
+                fill="url(#profitPattern)" 
+                radius={[4, 4, 0, 0]}
+                fillOpacity={0.4}
+              />
+              {/* Barres réelles (pleines) - superposées */}
+              <Bar 
+                dataKey="Revenus Payés" 
+                fill="#10b981" 
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar 
+                dataKey="Coûts" 
+                fill="#ef4444" 
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar 
+                dataKey="Profit Réel" 
+                fill="#3b82f6" 
+                radius={[4, 4, 0, 0]}
+              />
+              {/* Patterns pour barres projetées */}
+              <defs>
+                <pattern id="revenuePattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+                  <line x1="0" y1="0" x2="0" y2="8" stroke="#10b981" strokeWidth="4" />
+                </pattern>
+                <pattern id="profitPattern" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+                  <line x1="0" y1="0" x2="0" y2="8" stroke="#3b82f6" strokeWidth="4" />
+                </pattern>
+              </defs>
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
@@ -618,19 +680,39 @@ const FinancialAnalytics = () => {
                          invoice.status === 'overdue' ? '⚠️ Retard' : '📝 Brouillon'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-center">
-                      {invoice.status !== 'paid' && (
-                        <button
-                          onClick={() => markPaidMutation.mutate({ 
-                            invoiceId: invoice._id, 
-                            paymentData: { paidDate: new Date() }
-                          })}
-                          disabled={markPaidMutation.isPending}
-                          className="text-emerald-600 hover:text-emerald-700 text-sm font-medium"
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <a
+                          href={`https://monitoring.swigs.online/api/invoices/${invoice._id}/html`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded"
+                          title="Voir facture"
                         >
-                          Marquer payée
-                        </button>
-                      )}
+                          <Eye className="w-4 h-4" />
+                        </a>
+                        <a
+                          href={`https://monitoring.swigs.online/api/invoices/${invoice._id}/html`}
+                          download={`${invoice.invoiceNumber}.html`}
+                          className="p-1 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                          title="Télécharger"
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
+                        {invoice.status !== 'paid' && (
+                          <button
+                            onClick={() => markPaidMutation.mutate({ 
+                              invoiceId: invoice._id, 
+                              paymentData: { paidDate: new Date() }
+                            })}
+                            disabled={markPaidMutation.isPending}
+                            className="p-1 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded"
+                            title="Marquer payée"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
