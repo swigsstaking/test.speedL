@@ -95,7 +95,14 @@ const SiteDetail = () => {
           <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
         </button>
         <div className="flex-1 min-w-0">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 truncate">{site.name}</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 truncate">{site.name}</h2>
+            {site.external && (
+              <span className="px-2 py-1 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded">
+                Externe
+              </span>
+            )}
+          </div>
           <a 
             href={site.url} 
             target="_blank" 
@@ -290,10 +297,10 @@ const SiteDetail = () => {
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Requêtes</span>
           </div>
           <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-            {stats?.requests?.toLocaleString() || '0'}
+            {site.external ? 'TBD' : (stats?.requests?.toLocaleString() || '0')}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-            {stats?.uniqueVisitors || 0} visiteurs uniques
+            {site.external ? 'Données non disponibles' : `${stats?.uniqueVisitors || 0} visiteurs uniques`}
           </p>
         </motion.div>
 
@@ -305,17 +312,17 @@ const SiteDetail = () => {
         >
           <div className="flex items-center gap-2 mb-3">
             <AlertCircle className={`w-5 h-5 ${
-              (stats?.errors || 0) === 0 ? 'text-emerald-500' : 'text-red-500'
+              site.external ? 'text-slate-400' : (stats?.errors || 0) === 0 ? 'text-emerald-500' : 'text-red-500'
             }`} />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Erreurs</span>
           </div>
           <div className={`text-3xl font-bold ${
-            (stats?.errors || 0) === 0 ? 'text-emerald-600' : 'text-red-600'
+            site.external ? 'text-slate-900 dark:text-slate-100' : (stats?.errors || 0) === 0 ? 'text-emerald-600' : 'text-red-600'
           }`}>
-            {stats?.errors || 0}
+            {site.external ? 'TBD' : (stats?.errors || 0)}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-            Période: {selectedPeriod?.label}
+            {site.external ? 'Données non disponibles' : `Période: ${selectedPeriod?.label}`}
           </p>
         </motion.div>
       </div>

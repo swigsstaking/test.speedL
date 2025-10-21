@@ -515,7 +515,9 @@ app.get('/api/sites', async (req, res) => {
     let sitesToCheck = [
       { slug: 'speedl', name: 'Speed-L' },
       { slug: 'admin', name: 'Admin' },
-      { slug: 'monitoring', name: 'Monitoring' }
+      { slug: 'monitoring', name: 'Monitoring' },
+      { slug: 'moontain', name: 'Moontain', domain: 'www.moontain.ch', external: true },
+      { slug: 'adlr', name: 'ADLR Cosmetic Auto', domain: 'www.adlrcosmeticauto.ch', external: true }
     ];
     
     // Essayer de récupérer depuis le backend principal
@@ -543,7 +545,14 @@ app.get('/api/sites', async (req, res) => {
             domain: fullDomain
           };
         });
-        console.log(`✅ ${sitesToCheck.length} sites récupérés depuis backend:`, sitesToCheck);
+        
+        // Ajouter les sites externes
+        sitesToCheck.push(
+          { slug: 'moontain', name: 'Moontain', domain: 'www.moontain.ch', external: true },
+          { slug: 'adlr', name: 'ADLR Cosmetic Auto', domain: 'www.adlrcosmeticauto.ch', external: true }
+        );
+        
+        console.log(`✅ ${sitesToCheck.length} sites récupérés depuis backend (+ externes):`, sitesToCheck);
       }
     } catch (backendError) {
       console.log('⚠️ Backend principal non accessible:', backendError.message);
@@ -583,24 +592,26 @@ app.get('/api/sites', async (req, res) => {
           
           return {
             id: site.slug,
-            name: domain,
+            name: site.name || domain,
             url,
             status: uptimeCheck.status,
             latency: uptimeCheck.latency,
             uptime: 0, // TODO: Calculer depuis historique MongoDB
             ssl: sslCheck,
             statusCode: uptimeCheck.statusCode,
+            external: site.external || false,
           };
         } catch (error) {
           console.error(`❌ Erreur vérification ${site.slug}:`, error.message);
           return {
             id: site.slug,
-            name: domain,
+            name: site.name || domain,
             url,
             status: 'error',
             latency: 0,
             uptime: 0,
             ssl: { valid: false, expiresIn: 0 },
+            external: site.external || false,
           };
         }
       })

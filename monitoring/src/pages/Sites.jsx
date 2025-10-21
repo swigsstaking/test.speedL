@@ -65,7 +65,14 @@ const Sites = () => {
                   }`} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{site.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{site.name}</h3>
+                    {site.external && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded">
+                        Externe
+                      </span>
+                    )}
+                  </div>
                   <a 
                     href={site.url} 
                     target="_blank" 
