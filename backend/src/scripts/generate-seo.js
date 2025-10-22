@@ -106,10 +106,8 @@ const generateSEO = async () => {
   } catch (error) {
     console.error('❌ Erreur lors de la génération SEO:', error);
     throw error;
-  } finally {
-    await mongoose.connection.close();
-    console.log('🔌 Déconnexion de MongoDB');
   }
+  // Note: Ne pas fermer la connexion MongoDB ici car elle est partagée avec le serveur
 };
 
 // Exécuter si appelé directement

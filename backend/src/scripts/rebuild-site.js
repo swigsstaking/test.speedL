@@ -114,11 +114,19 @@ const rebuildSite = async (options = {}) => {
       const distPath = path.join(__dirname, '../../../dist');
       
       try {
-        // Copier les fichiers buildés
-        await execAsync(`sudo cp -r ${distPath}/* ${deployPath}/`);
-        await log(`✅ Site déployé vers ${deployPath}`);
+        // Copier les fichiers buildés (sans sudo si permissions OK)
+        try {
+          await execAsync(`cp -r ${distPath}/* ${deployPath}/`);
+          await log(`✅ Site déployé vers ${deployPath}`);
+        } catch (cpError) {
+          // Si erreur de permission, essayer avec sudo (nécessite configuration sudoers)
+          await log(`⚠️  Tentative avec sudo...`);
+          await execAsync(`sudo -n cp -r ${distPath}/* ${deployPath}/`);
+          await log(`✅ Site déployé vers ${deployPath} (avec sudo)`);
+        }
       } catch (deployError) {
         await log(`❌ Erreur de déploiement: ${deployError.message}`);
+        await log(`💡 Astuce: Configurez les permissions ou ajoutez l'utilisateur au groupe www-data`);
         throw deployError;
       }
     } else {
