@@ -368,24 +368,24 @@ const FinancialAnalytics = () => {
                       {server.profit >= 0 ? '+' : ''}{server.profit.toFixed(2)} CHF
                     </span>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 dark:text-slate-400">
+                  <div className="grid grid-cols-3 gap-2 text-sm text-slate-600 dark:text-slate-400">
                     <div>
-                      <span className="block">Revenus</span>
+                      <span className="block text-xs">Revenus</span>
                       <span className="font-medium text-slate-900 dark:text-slate-100">{server.revenue.toFixed(2)} CHF</span>
                     </div>
                     <div>
-                      <span className="block">Coûts</span>
+                      <span className="block text-xs">Coûts</span>
                       <span className="font-medium text-slate-900 dark:text-slate-100">{server.cost.toFixed(2)} CHF</span>
                     </div>
                     <div>
-                      <span className="block">Sites</span>
+                      <span className="block text-xs">Sites</span>
                       <span className="font-medium text-slate-900 dark:text-slate-100">{server.siteCount}</span>
                     </div>
                   </div>
                   <div className="mt-2">
-                    <div className="flex items-center justify-between text-xs mb-1">
+                    <div className="flex items-center justify-between text-sm mb-1">
                       <span className="text-slate-600 dark:text-slate-400">Marge</span>
-                      <span className={`font-medium ${
+                      <span className={`font-semibold ${
                         server.margin >= 30 ? 'text-emerald-600' :
                         server.margin >= 15 ? 'text-amber-600' : 'text-red-600'
                       }`}>

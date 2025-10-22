@@ -787,6 +787,18 @@ app.get('/api/analytics/financial', async (req, res) => {
     
     // Récupérer tous les pricings sites
     const sitePricings = await SitePricing.find();
+    
+    // CALCULER LE COÛT PAR SITE (part du serveur)
+    for (const site of sitePricings) {
+      const server = serverCosts.find(s => s.serverId === site.serverId);
+      if (server) {
+        const sitesOnServer = sitePricings.filter(s => s.serverId === site.serverId);
+        const siteCount = sitesOnServer.length;
+        // Diviser coût serveur par nombre de sites
+        site.monthlyCost = siteCount > 0 ? server.totalMonthly / siteCount : 0;
+        await site.save(); // Sauvegarder (déclenche pre-save pour recalculer profit/marge)
+      }
+    }
     const totalRevenue = sitePricings.reduce((sum, s) => sum + s.actualPrice, 0);
     
     // Calculer le profit global RÉEL : Revenus - Coûts serveurs
