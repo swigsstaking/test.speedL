@@ -74,15 +74,31 @@ async function getCpuMetrics() {
 /**
  * Collecter métriques RAM
  */
-function getMemoryMetrics() {
+async function getMemoryMetrics() {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();
-  const usedMem = totalMem - freeMem;
+  
+  // Sur Linux, lire /proc/meminfo pour obtenir MemAvailable (RAM réellement disponible)
+  let availableMem = freeMem;
+  try {
+    if (os.platform() === 'linux') {
+      const meminfo = await fs.readFile('/proc/meminfo', 'utf8');
+      const availableMatch = meminfo.match(/MemAvailable:\s+(\d+)\s+kB/);
+      if (availableMatch) {
+        availableMem = parseInt(availableMatch[1]) * 1024; // Convertir kB en bytes
+      }
+    }
+  } catch (err) {
+    // Si erreur, utiliser freeMem comme fallback
+  }
+  
+  const usedMem = totalMem - availableMem;
   
   return {
     total: totalMem,
     used: usedMem,
     free: freeMem,
+    available: availableMem,
     percent: (usedMem / totalMem) * 100
   };
 }
@@ -172,7 +188,7 @@ async function collectMetrics() {
   
   const [cpu, memory, disk, network, processes] = await Promise.all([
     getCpuMetrics(),
-    Promise.resolve(getMemoryMetrics()),
+    getMemoryMetrics(),
     getDiskMetrics(),
     getNetworkMetrics(),
     getProcessMetrics()
