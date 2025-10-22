@@ -49,42 +49,50 @@ const ServerDetail = () => {
   }
 
   // Transformer les données d'historique pour les graphiques
-  const cpuData = historyData?.data?.metrics?.map(m => ({
-    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
-    }),
-    value: m.metrics?.cpu?.usage || 0
-  })) || [];
+  const cpuData = historyData?.data?.metrics?.map(m => {
+    const date = new Date(m.timestamp);
+    const time = period === '7d' || period === '30d'
+      ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+      : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return {
+      time,
+      value: m.metrics?.cpu?.usage || 0
+    };
+  }) || [];
 
-  const ramData = historyData?.data?.metrics?.map(m => ({
-    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
-    }),
-    value: m.metrics?.ram?.percent || 0
-  })) || [];
+  const ramData = historyData?.data?.metrics?.map(m => {
+    const date = new Date(m.timestamp);
+    const time = period === '7d' || period === '30d'
+      ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+      : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return {
+      time,
+      value: m.metrics?.ram?.percent || 0
+    };
+  }) || [];
 
-  const diskData = historyData?.data?.metrics?.map(m => ({
-    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
-    }),
-    value: m.metrics?.disk?.[0]?.percent || 0
-  })) || [];
+  const diskData = historyData?.data?.metrics?.map(m => {
+    const date = new Date(m.timestamp);
+    const time = period === '7d' || period === '30d'
+      ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+      : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return {
+      time,
+      value: m.metrics?.disk?.[0]?.percent || 0
+    };
+  }) || [];
 
-  const networkData = historyData?.data?.metrics?.map(m => ({
-    time: new Date(m.timestamp).toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      ...(period === '7d' || period === '30d' ? { day: '2-digit', month: '2-digit' } : {})
-    }),
-    rx: (m.metrics?.network?.rx || 0) / 1024 / 1024, // MB/s
-    tx: (m.metrics?.network?.tx || 0) / 1024 / 1024  // MB/s
-  })) || [];
+  const networkData = historyData?.data?.metrics?.map(m => {
+    const date = new Date(m.timestamp);
+    const time = period === '7d' || period === '30d'
+      ? date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+      : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return {
+      time,
+      rx: (m.metrics?.network?.rx || 0) / 1024 / 1024, // MB/s
+      tx: (m.metrics?.network?.tx || 0) / 1024 / 1024  // MB/s
+    };
+  }) || [];
 
   return (
     <div className="space-y-6">

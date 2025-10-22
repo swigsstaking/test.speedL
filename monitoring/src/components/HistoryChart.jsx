@@ -26,17 +26,19 @@ const HistoryChart = ({ serverId, metric = 'cpu', title }) => {
     let timeLabel;
     
     if (period === '30d') {
-      // Pour 30 jours : afficher juste la date
-      timeLabel = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-    } else if (period === '7d') {
-      // Pour 7 jours : afficher date + heure
+      // Pour 30 jours : afficher juste la date (JJ/MM)
       timeLabel = date.toLocaleDateString('fr-FR', { 
         day: '2-digit', 
-        month: '2-digit',
-        hour: '2-digit'
+        month: '2-digit' 
+      });
+    } else if (period === '7d') {
+      // Pour 7 jours : afficher date (JJ/MM)
+      timeLabel = date.toLocaleDateString('fr-FR', { 
+        day: '2-digit', 
+        month: '2-digit'
       });
     } else {
-      // Pour 1h et 24h : afficher juste l'heure
+      // Pour 1h et 24h : afficher juste l'heure (HH:MM)
       timeLabel = date.toLocaleTimeString('fr-FR', { 
         hour: '2-digit', 
         minute: '2-digit'
