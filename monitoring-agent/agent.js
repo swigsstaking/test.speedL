@@ -46,9 +46,10 @@ async function collectMetrics() {
       },
       ram: {
         total: mem.total,
-        used: mem.used,
+        used: mem.total - mem.available, // Utiliser available au lieu de used
         free: mem.free,
-        percent: Math.round((mem.used / mem.total) * 100 * 100) / 100
+        available: mem.available,
+        percent: Math.round(((mem.total - mem.available) / mem.total) * 100 * 100) / 100
       },
       disk: fsSize.map(disk => ({
         mount: disk.mount,
