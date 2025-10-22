@@ -53,6 +53,18 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Middleware: Vérifier connexion MongoDB
+app.use('/api/', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1 && !req.path.includes('/health')) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection unavailable. Please try again in a moment.',
+      error: 'SERVICE_UNAVAILABLE'
+    });
+  }
+  next();
+});
+
 // Static files (uploads)
 app.use('/uploads', express.static('uploads'));
 
@@ -69,9 +81,11 @@ app.use('/api/contact', contactRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
+  const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
   res.json({ 
-    status: 'OK', 
+    status: mongoStatus === 'connected' ? 'OK' : 'ERROR',
     message: 'SWIGS CMS API is running',
+    mongodb: mongoStatus,
     timestamp: new Date().toISOString()
   });
 });
@@ -96,23 +110,39 @@ app.use((req, res) => {
   });
 });
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/swigs-cms')
-  .then(() => {
-    logger.success('Connected to MongoDB');
-    
-    // Start server
-    app.listen(PORT, () => {
-      logger.success(`SWIGS CMS API running on port ${PORT}`);
-      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`API: http://localhost:${PORT}/api`);
+// MongoDB connection with auto-reconnect
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/swigs-cms', {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     });
-  })
-  .catch((err) => {
-    logger.error('MongoDB connection error:', err.message);
-    process.exit(1);
-  });
+    logger.success('✅ Connected to MongoDB');
+  } catch (err) {
+    logger.error('❌ MongoDB connection error:', err.message);
+    logger.info('⏳ Retrying in 5 seconds...');
+    setTimeout(connectDB, 5000);
+  }
+};
+
+// Handle MongoDB disconnection
+mongoose.connection.on('disconnected', () => {
+  logger.error('❌ MongoDB disconnected! Attempting to reconnect...');
+});
+
+mongoose.connection.on('reconnected', () => {
+  logger.success('✅ MongoDB reconnected');
+});
+
+// Connect to MongoDB
+connectDB();
+
+// Start server (même si MongoDB n'est pas encore connecté)
+app.listen(PORT, () => {
+  logger.success(`🚀 SWIGS CMS API running on port ${PORT}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`API: http://localhost:${PORT}/api`);
+});
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
