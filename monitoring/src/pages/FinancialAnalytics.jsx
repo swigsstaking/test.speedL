@@ -848,6 +848,7 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave, allServers 
             onChange={(e) => setFormData({ ...formData, serverId: e.target.value })}
             className="w-full px-2 py-1 text-sm border rounded dark:bg-slate-800 dark:border-slate-600"
           >
+            <option value="none">Aucun (Externe)</option>
             {allServers.map((server) => (
               <option key={server.serverId} value={server.serverId}>
                 {server.serverId}
@@ -905,7 +906,15 @@ const SitePricingRow = ({ site, isEditing, onEdit, onCancel, onSave, allServers 
     <>
       <tr className="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/30">
         <td className="py-3 px-4 font-medium text-slate-900 dark:text-slate-100">{site.siteId}</td>
-        <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{site.serverId || 'server-1'}</td>
+        <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
+          {site.serverId === 'none' ? (
+            <span className="px-2 py-0.5 text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded">
+              Externe
+            </span>
+          ) : (
+            site.serverId || 'server-1'
+          )}
+        </td>
         <td className="py-3 px-4 text-right">
           <div className="flex items-center justify-end gap-2">
             <span className="text-slate-600 dark:text-slate-400">{site.suggestedPrice?.toFixed(2) || '0.00'}</span>
