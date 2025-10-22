@@ -102,12 +102,20 @@ app.post('/api/metrics', async (req, res) => {
   try {
     const { serverId, ...metricData } = req.body;
 
-    // Sauvegarder métrique dans ServerMetric
+    // Sauvegarder métrique dans ServerMetric (historique détaillé)
     const serverMetric = new ServerMetric({
       serverId,
       metrics: metricData
     });
     await serverMetric.save();
+
+    // Sauvegarder aussi dans Metric (pour /api/servers)
+    const metric = new Metric({
+      serverId,
+      ...metricData
+    });
+    await metric.save();
+    
     console.log(`💾 Métrique sauvegardée pour ${serverId}`);
 
     // Mettre à jour serveur
