@@ -20,9 +20,16 @@ import SEO from '../models/SEO.js';
  */
 const generateSEO = async () => {
   try {
-    console.log('🔄 Connexion à MongoDB...');
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/swigs-cms');
-    console.log('✅ Connecté à MongoDB');
+    // Vérifier si déjà connecté
+    if (mongoose.connection.readyState !== 1) {
+      console.log('🔄 Connexion à MongoDB...');
+      await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/swigs-cms', {
+        serverSelectionTimeoutMS: 5000,
+      });
+      console.log('✅ Connecté à MongoDB');
+    } else {
+      console.log('✅ Utilisation connexion MongoDB existante');
+    }
 
     // Récupérer tous les sites actifs
     const sites = await Site.find({ isActive: true });
