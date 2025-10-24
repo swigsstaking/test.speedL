@@ -1,0 +1,253 @@
+═══════════════════════════════════════════════════════════════════
+  🚀 COMMANDES DE DÉPLOIEMENT SERVEUR - SWIGS MULTI-SITES 🚀
+═══════════════════════════════════════════════════════════════════
+
+📅 Date: 24 Octobre 2025
+🖥️  Serveur: sw4c-6 (swigs@serveur)
+📦 Repos: swigsstaking/test.speedL
+✅ Commits: 3 commits pushés sur GitHub
+
+═══════════════════════════════════════════════════════════════════
+  OPTION 1: SCRIPT AUTOMATISÉ (RECOMMANDÉ)
+═══════════════════════════════════════════════════════════════════
+
+# 1. Copier le script sur le serveur (depuis votre machine locale)
+scp deploy-multi-sites.sh swigs@serveur:~/
+
+# 2. Se connecter au serveur
+ssh swigs@serveur
+
+# 3. Rendre le script exécutable
+chmod +x ~/deploy-multi-sites.sh
+
+# 4. Exécuter le script
+./deploy-multi-sites.sh
+
+# Le script va:
+# ✅ Créer des backups (MongoDB, sites, Nginx)
+# ✅ Déployer le Backend (pull + install + restart)
+# ✅ Déployer l'Admin (pull + build + deploy)
+# ✅ Déployer le Control Center (pull + build + deploy)
+# ✅ Vérifier que tout fonctionne
+
+# Temps estimé: 5-10 minutes
+
+═══════════════════════════════════════════════════════════════════
+  OPTION 2: COMMANDES MANUELLES
+═══════════════════════════════════════════════════════════════════
+
+# 1. Se connecter au serveur
+ssh swigs@serveur
+
+# 2. BACKUP (IMPORTANT - Ne pas sauter cette étape)
+mkdir -p ~/backups/mongodb ~/backups/sites ~/backups/nginx
+mongodump --db swigs-cms --out ~/backups/mongodb/pre-multi-sites-$(date +%Y%m%d-%H%M)
+mongodump --db swigs-monitoring --out ~/backups/mongodb/pre-multi-sites-$(date +%Y%m%d-%H%M)
+tar -czf ~/backups/sites/pre-multi-sites-$(date +%Y%m%d-%H%M).tar.gz /var/www/
+sudo tar -czf ~/backups/nginx/pre-multi-sites-$(date +%Y%m%d-%H%M).tar.gz /etc/nginx/sites-available/
+
+# 3. BACKEND CMS
+cd ~/swigs-apps/swigs-cms-backend
+git pull origin main
+npm install
+pm2 restart swigs-cms-backend
+pm2 logs swigs-cms-backend --lines 30
+curl http://localhost:3000/api/health
+
+# 4. ADMIN CMS
+cd ~/swigs-apps/swigs-cms-admin
+git pull origin main
+npm install
+npm run build
+sudo cp -r dist/* /var/www/admin/
+sudo chown -R swigs:www-data /var/www/admin
+curl -I https://admin.swigs.online
+
+# 5. CONTROL CENTER
+cd ~/swigs-apps/swigs-control-center
+git pull origin main
+npm install
+npm run build
+sudo cp -r dist/* /var/www/monitoring/
+sudo chown -R swigs:www-data /var/www/monitoring
+curl -I https://monitoring.swigs.online
+
+# 6. VÉRIFICATIONS
+pm2 status
+sudo nginx -t
+sudo systemctl status mongod
+df -h
+
+═══════════════════════════════════════════════════════════════════
+  TESTS POST-DÉPLOIEMENT
+═══════════════════════════════════════════════════════════════════
+
+# 1. ADMIN CMS (https://admin.swigs.online)
+# - Se connecter
+# - Aller dans Médias → Sélectionner un site → Uploader une image
+# - Aller dans SEO → Cliquer sur "+" → Créer une nouvelle page
+# - Aller dans Content → Cliquer sur "Nouvelle section"
+
+# 2. CONTROL CENTER (https://monitoring.swigs.online)
+# - Aller dans Sites → Cliquer sur "Ajouter un site"
+# - Remplir le formulaire → Enregistrer
+# - Tester Modifier et Supprimer
+
+# 3. VÉRIFIER LES LOGS
+pm2 logs swigs-cms-backend --lines 50
+sudo tail -f /var/log/nginx/admin-error.log
+sudo tail -f /var/log/nginx/monitoring-error.log
+
+═══════════════════════════════════════════════════════════════════
+  MIGRATION DES MÉDIAS (OPTIONNEL)
+═══════════════════════════════════════════════════════════════════
+
+# Si vous avez des médias existants dans /var/www/speed-l/uploads/
+
+# 1. Vérifier
+ls -la /var/www/speed-l/uploads/
+
+# 2. Créer la nouvelle structure
+sudo mkdir -p /var/www/uploads/speed-l
+
+# 3. Déplacer les médias
+sudo mv /var/www/speed-l/uploads/* /var/www/uploads/speed-l/
+
+# 4. Permissions
+sudo chown -R swigs:www-data /var/www/uploads
+sudo chmod -R 775 /var/www/uploads
+
+# 5. Mettre à jour Nginx
+sudo nano /etc/nginx/sites-available/speed-l
+# Ajouter:
+# location /uploads {
+#     alias /var/www/uploads;
+#     expires 30d;
+#     add_header Cache-Control "public, immutable";
+#     try_files $uri =404;
+# }
+
+sudo nginx -t
+sudo nginx -s reload
+
+# 6. Créer les entrées MongoDB
+# Voir docs/DEPLOIEMENT-MULTI-SITES.md section "Migration des Médias"
+
+═══════════════════════════════════════════════════════════════════
+  ROLLBACK (EN CAS DE PROBLÈME)
+═══════════════════════════════════════════════════════════════════
+
+# BACKEND
+cd ~/swigs-apps/swigs-cms-backend
+git log --oneline -5  # Noter le commit précédent
+git checkout c5ddafa  # Remplacer par le bon hash
+pm2 restart swigs-cms-backend
+
+# ADMIN
+cd ~/swigs-apps/swigs-cms-admin
+git checkout c5ddafa
+npm install
+npm run build
+sudo cp -r dist/* /var/www/admin/
+
+# CONTROL CENTER
+cd ~/swigs-apps/swigs-control-center
+git checkout <commit-hash-precedent>
+npm install
+npm run build
+sudo cp -r dist/* /var/www/monitoring/
+
+# MONGODB
+ls -la ~/backups/mongodb/
+mongorestore --db swigs-cms ~/backups/mongodb/pre-multi-sites-YYYYMMDD-HHMM/swigs-cms/
+pm2 restart swigs-cms-backend
+
+═══════════════════════════════════════════════════════════════════
+  MONITORING POST-DÉPLOIEMENT
+═══════════════════════════════════════════════════════════════════
+
+# Surveiller pendant 24h
+
+# Logs Backend en temps réel
+pm2 logs swigs-cms-backend
+
+# Logs Nginx
+sudo tail -f /var/log/nginx/admin-error.log
+sudo tail -f /var/log/nginx/monitoring-error.log
+
+# Métriques serveur
+htop
+df -h
+
+# Vérifier dans le Control Center
+# - Ouvrir https://monitoring.swigs.online
+# - Vérifier CPU, RAM, Disk
+# - Vérifier que tous les sites sont en ligne
+
+═══════════════════════════════════════════════════════════════════
+  CHECKLIST FINALE
+═══════════════════════════════════════════════════════════════════
+
+[ ] Script exécuté OU commandes manuelles terminées
+[ ] Backups créés
+[ ] Backend redémarré sans erreur
+[ ] Admin accessible (https://admin.swigs.online)
+[ ] Control Center accessible (https://monitoring.swigs.online)
+[ ] Tests upload médias OK
+[ ] Tests ajout pages SEO OK
+[ ] Tests ajout sections Content OK
+[ ] Tests gestion sites Control Center OK
+[ ] Logs vérifiés (pas d'erreurs)
+[ ] Monitoring actif pendant 24h
+
+═══════════════════════════════════════════════════════════════════
+  URLS À TESTER
+═══════════════════════════════════════════════════════════════════
+
+✅ Admin CMS: https://admin.swigs.online
+✅ Control Center: https://monitoring.swigs.online
+✅ API Backend: http://localhost:3000/api/health
+✅ Speed-L: https://speed-l.swigs.online
+
+═══════════════════════════════════════════════════════════════════
+  DOCUMENTATION COMPLÈTE
+═══════════════════════════════════════════════════════════════════
+
+📚 RESUME-FINAL.md - Vue d'ensemble complète
+📚 COMMANDES-DEPLOIEMENT.md - Guide de déploiement
+📚 docs/DEPLOIEMENT-MULTI-SITES.md - Guide détaillé
+📚 docs/MODIFICATIONS-MULTI-SITES.md - Résumé technique
+📚 docs/ANALYSE-MULTI-SITES.md - Analyse des problèmes
+
+═══════════════════════════════════════════════════════════════════
+  SUPPORT
+═══════════════════════════════════════════════════════════════════
+
+En cas de problème:
+
+1. Vérifier les logs:
+   pm2 logs swigs-cms-backend --lines 100
+   sudo tail -f /var/log/nginx/admin-error.log
+
+2. Consulter la documentation:
+   cat ~/swigs-apps/swigs-cms-backend/../docs/DEPLOIEMENT-MULTI-SITES.md
+
+3. Rollback si nécessaire (voir section ci-dessus)
+
+4. Vérifier l'état des services:
+   pm2 status
+   sudo systemctl status nginx
+   sudo systemctl status mongod
+
+═══════════════════════════════════════════════════════════════════
+
+✅ TOUT EST PRÊT POUR LE DÉPLOIEMENT !
+
+Prochaine étape: Exécuter le script deploy-multi-sites.sh
+
+═══════════════════════════════════════════════════════════════════
+Auteur: Cascade AI
+Date: 24 Octobre 2025
+Version: 1.0
+Commits GitHub: e1d3953, 1ab8f43, 16d42ad
+═══════════════════════════════════════════════════════════════════
