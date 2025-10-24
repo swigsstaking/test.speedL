@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSite } from '../context/SiteContext';
-import { seoAPI } from '../services/api';
-import { Search, Save, Plus } from 'lucide-react';
+import { seoAPI, sitesAPI } from '../services/api';
+import { Search, Save, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const SEO = () => {
-  const { currentSite } = useSite();
+  const { currentSite, refreshSite } = useSite();
   const queryClient = useQueryClient();
   const [selectedPage, setSelectedPage] = useState('home');
+  const [showAddPageModal, setShowAddPageModal] = useState(false);
+  const [newPage, setNewPage] = useState({ value: '', label: '' });
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -18,13 +20,16 @@ const SEO = () => {
     robots: 'index,follow',
   });
 
-  const pages = [
-    { value: 'home', label: 'Page d\'accueil' },
-    { value: 'cours', label: 'Cours & Inscriptions' },
-    { value: 'permis', label: 'Permis' },
-    { value: 'bons-cadeaux', label: 'Bons cadeaux' },
-    { value: 'contact', label: 'Contact' },
-  ];
+  // Utiliser les pages du site ou des pages par défaut
+  const pages = currentSite?.pages && currentSite.pages.length > 0 
+    ? currentSite.pages.sort((a, b) => a.order - b.order)
+    : [
+        { value: 'home', label: 'Page d\'accueil', order: 0 },
+        { value: 'cours', label: 'Cours & Inscriptions', order: 1 },
+        { value: 'permis', label: 'Permis', order: 2 },
+        { value: 'bons-cadeaux', label: 'Bons cadeaux', order: 3 },
+        { value: 'contact', label: 'Contact', order: 4 },
+      ];
 
   const { data: seoData, isLoading } = useQuery({
     queryKey: ['seo', currentSite?._id, selectedPage],
@@ -68,6 +73,20 @@ const SEO = () => {
     },
   });
 
+  const addPageMutation = useMutation({
+    mutationFn: (newPages) => sitesAPI.updatePages(currentSite._id, newPages),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['sites']);
+      refreshSite();
+      toast.success('Page ajoutée avec succès');
+      setShowAddPageModal(false);
+      setNewPage({ value: '', label: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erreur lors de l\'ajout de la page');
+    },
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
     saveMutation.mutate({
@@ -85,6 +104,26 @@ const SEO = () => {
   const handleKeywordsChange = (e) => {
     const keywords = e.target.value.split(',').map(k => k.trim()).filter(Boolean);
     setFormData(prev => ({ ...prev, keywords }));
+  };
+
+  const handleAddPage = () => {
+    if (!newPage.value || !newPage.label) {
+      toast.error('Veuillez remplir tous les champs');
+      return;
+    }
+
+    // Vérifier si la page existe déjà
+    if (pages.find(p => p.value === newPage.value)) {
+      toast.error('Cette page existe déjà');
+      return;
+    }
+
+    const updatedPages = [
+      ...pages,
+      { ...newPage, order: pages.length }
+    ];
+
+    addPageMutation.mutate(updatedPages);
   };
 
   if (!currentSite) {
@@ -111,10 +150,19 @@ const SEO = () => {
         {/* Page Selector */}
         <div className="lg:col-span-1">
           <div className="card p-6 sticky top-6">
-            <h2 className="text-lg font-semibold text-gray-100 mb-4 flex items-center">
-              <Search className="w-5 h-5 mr-2" />
-              Pages
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-100 flex items-center">
+                <Search className="w-5 h-5 mr-2" />
+                Pages
+              </h2>
+              <button
+                onClick={() => setShowAddPageModal(true)}
+                className="p-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+                title="Ajouter une page"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
             <div className="space-y-2">
               {pages.map((page) => (
                 <button
@@ -277,6 +325,69 @@ const SEO = () => {
           )}
         </div>
       </div>
+
+      {/* Modal Ajouter une page */}
+      {showAddPageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-dark-800 rounded-lg p-6 w-full max-w-md border border-dark-700">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-100">Ajouter une page</h3>
+              <button
+                onClick={() => {
+                  setShowAddPageModal(false);
+                  setNewPage({ value: '', label: '' });
+                }}
+                className="text-gray-400 hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="label">Identifiant (slug)</label>
+                <input
+                  type="text"
+                  value={newPage.value}
+                  onChange={(e) => setNewPage(prev => ({ ...prev, value: e.target.value }))}
+                  className="input"
+                  placeholder="ex: about, services, pricing"
+                />
+              </div>
+
+              <div>
+                <label className="label">Libellé</label>
+                <input
+                  type="text"
+                  value={newPage.label}
+                  onChange={(e) => setNewPage(prev => ({ ...prev, label: e.target.value }))}
+                  className="input"
+                  placeholder="ex: À propos, Services, Tarifs"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowAddPageModal(false);
+                    setNewPage({ value: '', label: '' });
+                  }}
+                  className="btn-secondary"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleAddPage}
+                  disabled={addPageMutation.isPending}
+                  className="btn-primary"
+                >
+                  {addPageMutation.isPending ? 'Ajout...' : 'Ajouter'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

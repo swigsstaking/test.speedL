@@ -1,14 +1,30 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSite } from '../context/SiteContext';
-import { contentAPI } from '../services/api';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { contentAPI, sitesAPI } from '../services/api';
+import { Plus, Edit, Trash2, Eye, EyeOff, X, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Content = () => {
-  const { currentSite } = useSite();
+  const { currentSite, refreshSite } = useSite();
   const queryClient = useQueryClient();
   const [selectedSection, setSelectedSection] = useState('all');
+  const [showModal, setShowModal] = useState(false);
+  const [showAddSectionModal, setShowAddSectionModal] = useState(false);
+  const [editingContent, setEditingContent] = useState(null);
+  const [newSection, setNewSection] = useState({ value: '', label: '' });
+  const [formData, setFormData] = useState({
+    section: '',
+    type: 'text',
+    data: {},
+    order: 0,
+    isActive: true,
+  });
+
+  // Utiliser les sections du site ou des sections par défaut
+  const sections = currentSite?.sections && currentSite.sections.length > 0
+    ? ['all', ...currentSite.sections.sort((a, b) => a.order - b.order).map(s => s.value)]
+    : ['all', 'hero', 'about', 'services', 'testimonials', 'faq', 'footer'];
 
   const { data: contentData, isLoading } = useQuery({
     queryKey: ['content', currentSite?._id, selectedSection],
@@ -41,6 +57,39 @@ const Content = () => {
     },
   });
 
+  const saveMutation = useMutation({
+    mutationFn: (data) => {
+      if (editingContent) {
+        return contentAPI.update(editingContent._id, data);
+      }
+      return contentAPI.create({ ...data, siteId: currentSite._id });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['content']);
+      toast.success(editingContent ? 'Contenu modifié' : 'Contenu créé');
+      setShowModal(false);
+      setEditingContent(null);
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erreur lors de la sauvegarde');
+    },
+  });
+
+  const addSectionMutation = useMutation({
+    mutationFn: (newSections) => sitesAPI.updateSections(currentSite._id, newSections),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['sites']);
+      refreshSite();
+      toast.success('Section ajoutée avec succès');
+      setShowAddSectionModal(false);
+      setNewSection({ value: '', label: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erreur lors de l\'ajout de la section');
+    },
+  });
+
   const handleDelete = async (id) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce contenu ?')) {
       deleteMutation.mutate(id);
@@ -51,7 +100,52 @@ const Content = () => {
     toggleActiveMutation.mutate({ id, isActive: !currentStatus });
   };
 
-  const sections = ['all', 'hero', 'about', 'services', 'testimonials', 'faq', 'footer'];
+  const handleEdit = (item) => {
+    setEditingContent(item);
+    setFormData({
+      section: item.section,
+      type: item.type,
+      data: item.data,
+      order: item.order,
+      isActive: item.isActive,
+    });
+    setShowModal(true);
+  };
+
+  const handleAddSection = () => {
+    if (!newSection.value || !newSection.label) {
+      toast.error('Veuillez remplir tous les champs');
+      return;
+    }
+
+    const currentSections = currentSite?.sections || [];
+    if (currentSections.find(s => s.value === newSection.value)) {
+      toast.error('Cette section existe déjà');
+      return;
+    }
+
+    const updatedSections = [
+      ...currentSections,
+      { ...newSection, order: currentSections.length }
+    ];
+
+    addSectionMutation.mutate(updatedSections);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      section: '',
+      type: 'text',
+      data: {},
+      order: 0,
+      isActive: true,
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    saveMutation.mutate(formData);
+  };
 
   if (!currentSite) {
     return (
@@ -66,14 +160,28 @@ const Content = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-100">Gestion du Contenu</h1>
-          <p className="text-gray-400 mt-2">Gérez les blocs de contenu de votre site</p>
+          <p className="text-gray-400 mt-2">Gérez les blocs de contenu de {currentSite.name}</p>
         </div>
-        <button
-          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Nouveau contenu</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setShowAddSectionModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Nouvelle section</span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingContent(null);
+              resetForm();
+              setShowModal(true);
+            }}
+            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Nouveau contenu</span>
+          </button>
+        </div>
       </div>
 
       {/* Section Filter */}
@@ -144,6 +252,7 @@ const Content = () => {
                     {item.isActive ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                   </button>
                   <button
+                    onClick={() => handleEdit(item)}
                     className="p-2 text-blue-400 hover:text-blue-300 hover:bg-dark-700 rounded-lg transition-colors"
                     title="Modifier"
                   >
@@ -160,6 +269,197 @@ const Content = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal Créer/Éditer contenu */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-dark-800 rounded-lg p-6 w-full max-w-2xl border border-dark-700 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-100">
+                {editingContent ? 'Éditer le contenu' : 'Nouveau contenu'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingContent(null);
+                  resetForm();
+                }}
+                className="text-gray-400 hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Section *</label>
+                  <select
+                    value={formData.section}
+                    onChange={(e) => setFormData(prev => ({ ...prev, section: e.target.value }))}
+                    className="input"
+                    required
+                  >
+                    <option value="">Sélectionner...</option>
+                    {sections.filter(s => s !== 'all').map((section) => {
+                      const sectionObj = currentSite?.sections?.find(s => s.value === section);
+                      return (
+                        <option key={section} value={section}>
+                          {sectionObj?.label || section}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="label">Type *</label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+                    className="input"
+                    required
+                  >
+                    <option value="text">Texte</option>
+                    <option value="html">HTML</option>
+                    <option value="image">Image</option>
+                    <option value="json">JSON</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Données (JSON) *</label>
+                <textarea
+                  value={JSON.stringify(formData.data, null, 2)}
+                  onChange={(e) => {
+                    try {
+                      const parsed = JSON.parse(e.target.value);
+                      setFormData(prev => ({ ...prev, data: parsed }));
+                    } catch (err) {
+                      // Laisser l'utilisateur éditer
+                    }
+                  }}
+                  className="input font-mono text-sm"
+                  rows="10"
+                  placeholder='{"title": "Mon titre", "description": "Ma description"}'
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Ordre d'affichage</label>
+                  <input
+                    type="number"
+                    value={formData.order}
+                    onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) }))}
+                    className="input"
+                    min="0"
+                  />
+                </div>
+
+                <div className="flex items-center pt-8">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isActive}
+                      onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-gray-300">Actif</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-dark-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingContent(null);
+                    resetForm();
+                  }}
+                  className="btn-secondary"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={saveMutation.isPending}
+                  className="btn-primary flex items-center space-x-2"
+                >
+                  <Save className="w-5 h-5" />
+                  <span>{saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ajouter une section */}
+      {showAddSectionModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-dark-800 rounded-lg p-6 w-full max-w-md border border-dark-700">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-100">Ajouter une section</h3>
+              <button
+                onClick={() => {
+                  setShowAddSectionModal(false);
+                  setNewSection({ value: '', label: '' });
+                }}
+                className="text-gray-400 hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="label">Identifiant (slug)</label>
+                <input
+                  type="text"
+                  value={newSection.value}
+                  onChange={(e) => setNewSection(prev => ({ ...prev, value: e.target.value }))}
+                  className="input"
+                  placeholder="ex: features, pricing, team"
+                />
+              </div>
+
+              <div>
+                <label className="label">Libellé</label>
+                <input
+                  type="text"
+                  value={newSection.label}
+                  onChange={(e) => setNewSection(prev => ({ ...prev, label: e.target.value }))}
+                  className="input"
+                  placeholder="ex: Fonctionnalités, Tarifs, Équipe"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowAddSectionModal(false);
+                    setNewSection({ value: '', label: '' });
+                  }}
+                  className="btn-secondary"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleAddSection}
+                  disabled={addSectionMutation.isPending}
+                  className="btn-primary"
+                >
+                  {addSectionMutation.isPending ? 'Ajout...' : 'Ajouter'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

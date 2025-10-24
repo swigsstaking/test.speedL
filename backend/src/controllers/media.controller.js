@@ -1,5 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
+import Media from '../models/Media.js';
+import Site from '../models/Site.js';
 
 // @desc    Upload file
 // @route   POST /api/media/upload
@@ -13,30 +15,50 @@ export const uploadFile = async (req, res, next) => {
       });
     }
 
-    // Utiliser PUBLIC_URL si défini, sinon construire depuis la requête
+    const { siteId } = req.body;
+    if (!siteId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Site ID is required',
+      });
+    }
+
+    // Vérifier que le site existe
+    const site = await Site.findById(siteId);
+    if (!site) {
+      return res.status(404).json({
+        success: false,
+        message: 'Site not found',
+      });
+    }
+
+    // Construire l'URL du fichier
     const publicUrl = process.env.PUBLIC_URL;
     let fileUrl;
     
     if (publicUrl) {
-      // Utiliser l'URL publique configurée (pour production)
-      fileUrl = `${publicUrl}/uploads/${req.file.filename}`;
+      fileUrl = `${publicUrl}/uploads/${site.slug}/${req.file.filename}`;
     } else {
-      // Fallback : construire depuis la requête (pour développement)
       const protocol = req.protocol;
       const host = req.get('host');
-      fileUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+      fileUrl = `${protocol}://${host}/uploads/${site.slug}/${req.file.filename}`;
     }
+
+    // Créer l'entrée dans MongoDB
+    const media = await Media.create({
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      url: fileUrl,
+      siteId,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      uploadedBy: req.user._id,
+    });
 
     res.status(201).json({
       success: true,
-      url: fileUrl, // Retourner directement l'URL
-      data: {
-        filename: req.file.filename,
-        originalName: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size,
-        url: fileUrl,
-      },
+      url: fileUrl,
+      data: media,
     });
   } catch (error) {
     next(error);
@@ -48,41 +70,24 @@ export const uploadFile = async (req, res, next) => {
 // @access  Private
 export const getFiles = async (req, res, next) => {
   try {
-    const uploadsDir = process.env.UPLOAD_PATH || '/var/www/speed-l/uploads';
-    const files = await fs.readdir(uploadsDir);
-
-    // Utiliser PUBLIC_URL si défini, sinon construire depuis la requête
-    const publicUrl = process.env.PUBLIC_URL;
-    let baseUrl;
+    const { siteId } = req.query;
     
-    if (publicUrl) {
-      baseUrl = publicUrl;
-    } else {
-      const protocol = req.protocol;
-      const host = req.get('host');
-      baseUrl = `${protocol}://${host}`;
+    if (!siteId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Site ID is required',
+      });
     }
 
-    const fileDetails = await Promise.all(
-      files
-        .filter(filename => !filename.startsWith('.')) // Ignorer les fichiers cachés
-        .map(async (filename) => {
-          const filePath = path.join(uploadsDir, filename);
-          const stats = await fs.stat(filePath);
-
-          return {
-            filename,
-            url: `${baseUrl}/uploads/${filename}`,
-            size: stats.size,
-            createdAt: stats.birthtime,
-          };
-        })
-    );
+    // Récupérer les médias depuis MongoDB filtrés par site
+    const media = await Media.find({ siteId })
+      .sort({ createdAt: -1 })
+      .populate('uploadedBy', 'name email');
 
     res.json({
       success: true,
-      count: fileDetails.length,
-      data: fileDetails.sort((a, b) => b.createdAt - a.createdAt),
+      count: media.length,
+      data: media,
     });
   } catch (error) {
     next(error);
@@ -90,27 +95,42 @@ export const getFiles = async (req, res, next) => {
 };
 
 // @desc    Delete file
-// @route   DELETE /api/media/:filename
+// @route   DELETE /api/media/:id
 // @access  Private
 export const deleteFile = async (req, res, next) => {
   try {
-    const { filename } = req.params;
-    const uploadsDir = process.env.UPLOAD_PATH || '/var/www/speed-l/uploads';
-    const filePath = path.join(uploadsDir, filename);
+    const { id } = req.params;
 
-    await fs.unlink(filePath);
+    // Récupérer le média depuis MongoDB
+    const media = await Media.findById(id).populate('siteId');
+    
+    if (!media) {
+      return res.status(404).json({
+        success: false,
+        message: 'Media not found',
+      });
+    }
+
+    // Construire le chemin du fichier
+    const uploadsDir = process.env.UPLOAD_PATH || '/var/www/uploads';
+    const filePath = path.join(uploadsDir, media.siteId.slug, media.filename);
+
+    // Supprimer le fichier du disque
+    try {
+      await fs.unlink(filePath);
+    } catch (fsError) {
+      console.error('Error deleting file from disk:', fsError);
+      // Continue même si le fichier n'existe pas sur le disque
+    }
+
+    // Supprimer l'entrée MongoDB
+    await Media.findByIdAndDelete(id);
 
     res.json({
       success: true,
       message: 'File deleted successfully',
     });
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      return res.status(404).json({
-        success: false,
-        message: 'File not found',
-      });
-    }
     next(error);
   }
 };

@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSite } from '../context/SiteContext';
 import { mediaAPI } from '../services/api';
 import { Upload, Trash2, Copy, Check, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Media = () => {
+  const { currentSite } = useSite();
   const queryClient = useQueryClient();
   const [uploading, setUploading] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(null);
 
   const { data: mediaData, isLoading } = useQuery({
-    queryKey: ['media'],
-    queryFn: mediaAPI.getAll,
+    queryKey: ['media', currentSite?._id],
+    queryFn: () => mediaAPI.getAll(currentSite?._id),
+    enabled: !!currentSite,
   });
 
   const deleteMutation = useMutation({
@@ -29,6 +32,11 @@ const Media = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!currentSite) {
+      toast.error('Veuillez sélectionner un site');
+      return;
+    }
+
     // Validate file size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('Le fichier est trop volumineux (max 5MB)');
@@ -44,23 +52,20 @@ const Media = () => {
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      await mediaAPI.upload(formData);
-      queryClient.invalidateQueries(['media']);
+      await mediaAPI.upload(file, currentSite._id);
+      queryClient.invalidateQueries(['media', currentSite._id]);
       toast.success('Fichier uploadé avec succès');
       e.target.value = ''; // Reset input
     } catch (error) {
-      toast.error('Erreur lors de l\'upload');
+      toast.error(error.message || 'Erreur lors de l\'upload');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDelete = async (filename) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer ce fichier ?')) {
-      deleteMutation.mutate(filename);
+      deleteMutation.mutate(id);
     }
   };
 
@@ -79,12 +84,22 @@ const Media = () => {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  if (!currentSite) {
+    return (
+      <div className="p-8">
+        <div className="card p-8 text-center">
+          <p className="text-gray-400">Veuillez sélectionner un site</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-100">Médiathèque</h1>
-          <p className="text-gray-400 mt-2">Gérez vos images et fichiers</p>
+          <p className="text-gray-400 mt-2">Gérez les images et fichiers de {currentSite.name}</p>
         </div>
         <label className="flex items-center space-x-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors cursor-pointer">
           <Upload className="w-5 h-5" />
@@ -123,7 +138,7 @@ const Media = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {mediaData?.data?.map((file) => (
             <div
-              key={file.filename}
+              key={file._id}
               className="group relative bg-dark-800 border border-dark-700 rounded-lg overflow-hidden hover:border-primary-600 transition-all"
             >
               {/* Image Preview */}
@@ -160,7 +175,7 @@ const Media = () => {
                   )}
                 </button>
                 <button
-                  onClick={() => handleDelete(file.filename)}
+                  onClick={() => handleDelete(file._id)}
                   className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                   title="Supprimer"
                 >

@@ -100,6 +100,36 @@ const siteSchema = new mongoose.Schema({
       googleAnalyticsId: String,
     },
   },
+  // Pages SEO configurables par site
+  pages: [{
+    value: {
+      type: String,
+      required: true,
+    },
+    label: {
+      type: String,
+      required: true,
+    },
+    order: {
+      type: Number,
+      default: 0,
+    },
+  }],
+  // Sections de contenu configurables par site
+  sections: [{
+    value: {
+      type: String,
+      required: true,
+    },
+    label: {
+      type: String,
+      required: true,
+    },
+    order: {
+      type: Number,
+      default: 0,
+    },
+  }],
   isActive: {
     type: Boolean,
     default: true,
