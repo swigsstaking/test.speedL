@@ -1,46 +1,21 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 import {
   uploadFile,
   getFiles,
   deleteFile,
 } from '../controllers/media.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
-import Site from '../models/Site.js';
 
 const router = express.Router();
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    try {
-      const { siteId } = req.body;
-      
-      if (!siteId) {
-        return cb(new Error('Site ID is required'));
-      }
-
-      // Récupérer le site pour obtenir le slug
-      const site = await Site.findById(siteId);
-      if (!site) {
-        return cb(new Error('Site not found'));
-      }
-
-      // Créer le dossier uploads/{slug} s'il n'existe pas
-      const baseUploadPath = process.env.UPLOAD_PATH || '/var/www/uploads';
-      const siteUploadPath = path.join(baseUploadPath, site.slug);
-      
-      // Créer le dossier de manière récursive
-      if (!fs.existsSync(siteUploadPath)) {
-        fs.mkdirSync(siteUploadPath, { recursive: true });
-      }
-
-      cb(null, siteUploadPath);
-    } catch (error) {
-      cb(error);
-    }
+  destination: (req, file, cb) => {
+    // Utiliser UPLOAD_PATH depuis .env ou /var/www/speed-l/uploads par défaut
+    const uploadPath = process.env.UPLOAD_PATH || '/var/www/speed-l/uploads';
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -73,6 +48,6 @@ router.use(protect);
 
 router.post('/upload', upload.single('file'), uploadFile);
 router.get('/', getFiles);
-router.delete('/:id', deleteFile);
+router.delete('/:filename', deleteFile);
 
 export default router;

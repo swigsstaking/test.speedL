@@ -57,25 +57,12 @@ export const SiteProvider = ({ children }) => {
     localStorage.setItem('currentSiteId', site._id);
   };
 
-  const refreshSite = async () => {
-    if (!currentSite) return;
-    try {
-      const response = await sitesAPI.getById(currentSite._id);
-      setCurrentSite(response.data);
-      // Mettre à jour aussi dans la liste
-      setSites(prev => prev.map(s => s._id === response.data._id ? response.data : s));
-    } catch (error) {
-      console.error('Error refreshing site:', error);
-    }
-  };
-
   const value = {
     sites,
     currentSite,
     loading,
     selectSite,
     refreshSites: loadSites,
-    refreshSite,
   };
 
   return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;
