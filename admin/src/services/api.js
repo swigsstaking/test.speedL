@@ -89,17 +89,18 @@ export const contentAPI = {
 
 // Media API
 export const mediaAPI = {
-  getAll: () => api.get('/media'),
-  upload: (file) => {
+  getAll: (siteId) => api.get('/media', { params: { siteId } }),
+  upload: (file, siteId) => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('siteId', siteId);
     return api.post('/media/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
-  delete: (filename) => api.delete(`/media/${filename}`),
+  delete: (id) => api.delete(`/media/${id}`),
 };
 
 // Webhook API

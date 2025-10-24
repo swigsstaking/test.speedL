@@ -1,12 +1,22 @@
-import { Globe, TrendingUp, Wifi, Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Globe, TrendingUp, Wifi, Clock, AlertCircle, CheckCircle, Plus, Edit, Trash2, X, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { monitoringApi } from '../services/api';
+import toast from 'react-hot-toast';
 
 const Sites = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showModal, setShowModal] = useState(false);
+  const [editingSite, setEditingSite] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    domain: '',
+  });
   const { data: sitesData } = useQuery({
     queryKey: ['sites'],
     queryFn: monitoringApi.getSites,
@@ -17,6 +27,36 @@ const Sites = () => {
     queryKey: ['all-sites-stats'],
     queryFn: () => monitoringApi.getAllSitesStats('24h'),
     refetchInterval: 60000, // Refresh toutes les minutes
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: (data) => {
+      if (editingSite) {
+        return monitoringApi.updateSite(editingSite._id, data);
+      }
+      return monitoringApi.createSite(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['sites']);
+      toast.success(editingSite ? 'Site modifié' : 'Site créé');
+      setShowModal(false);
+      setEditingSite(null);
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erreur lors de la sauvegarde');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: monitoringApi.deleteSite,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['sites']);
+      toast.success('Site supprimé');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Erreur lors de la suppression');
+    },
   });
 
   const sites = (sitesData?.data || []).map(site => {
@@ -31,6 +71,35 @@ const Sites = () => {
     };
   });
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      slug: '',
+      domain: '',
+    });
+  };
+
+  const handleEdit = (site) => {
+    setEditingSite(site);
+    setFormData({
+      name: site.name,
+      slug: site.slug,
+      domain: site.domain,
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce site ?')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    saveMutation.mutate(formData);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -42,6 +111,17 @@ const Sites = () => {
           <span className="text-sm text-slate-600 dark:text-slate-300">
             {sites.filter(s => s.status === 'online').length} / {sites.length} en ligne
           </span>
+          <button
+            onClick={() => {
+              setEditingSite(null);
+              resetForm();
+              setShowModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Ajouter un site</span>
+          </button>
         </div>
       </div>
 
@@ -218,16 +298,121 @@ const Sites = () => {
                   </div>
                 )}
               </div>
-              <button 
-                onClick={() => navigate(`/sites/${site.id}`)}
-                className="btn-secondary text-sm"
-              >
-                Voir détails
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleEdit(site)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                  title="Modifier"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDelete(site._id)}
+                  className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  title="Supprimer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => navigate(`/sites/${site.id}`)}
+                  className="btn-secondary text-sm ml-2"
+                >
+                  Voir détails
+                </button>
+              </div>
             </div>
           </motion.div>
         ))}
       </div>
+
+      {/* Modal Créer/Éditer Site */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                {editingSite ? 'Éditer le site' : 'Nouveau site'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingSite(null);
+                  resetForm();
+                }}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Nom du site *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="ex: Speed-L"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Slug *
+                </label>
+                <input
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="ex: speed-l"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Domaine *
+                </label>
+                <input
+                  type="text"
+                  value={formData.domain}
+                  onChange={(e) => setFormData(prev => ({ ...prev, domain: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="ex: speed-l.swigs.online"
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingSite(null);
+                    resetForm();
+                  }}
+                  className="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={saveMutation.isPending}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saveMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

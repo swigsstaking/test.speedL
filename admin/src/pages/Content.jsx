@@ -51,7 +51,12 @@ const Content = () => {
     toggleActiveMutation.mutate({ id, isActive: !currentStatus });
   };
 
-  const sections = ['all', 'hero', 'about', 'services', 'testimonials', 'faq', 'footer'];
+  // Utiliser les sections du site ou les sections par défaut
+  const sectionsList = currentSite?.sections && currentSite.sections.length > 0
+    ? currentSite.sections.map(s => s.value)
+    : ['hero', 'about', 'services', 'testimonials', 'faq', 'footer'];
+  
+  const sections = ['all', ...sectionsList];
 
   if (!currentSite) {
     return (

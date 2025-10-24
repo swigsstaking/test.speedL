@@ -18,13 +18,16 @@ const SEO = () => {
     robots: 'index,follow',
   });
 
-  const pages = [
-    { value: 'home', label: 'Page d\'accueil' },
-    { value: 'cours', label: 'Cours & Inscriptions' },
-    { value: 'permis', label: 'Permis' },
-    { value: 'bons-cadeaux', label: 'Bons cadeaux' },
-    { value: 'contact', label: 'Contact' },
-  ];
+  // Utiliser les pages du site ou les pages par défaut
+  const pages = currentSite?.pages && currentSite.pages.length > 0
+    ? currentSite.pages
+    : [
+        { value: 'home', label: 'Page d\'accueil' },
+        { value: 'cours', label: 'Cours & Inscriptions' },
+        { value: 'permis', label: 'Permis' },
+        { value: 'bons-cadeaux', label: 'Bons cadeaux' },
+        { value: 'contact', label: 'Contact' },
+      ];
 
   const { data: seoData, isLoading } = useQuery({
     queryKey: ['seo', currentSite?._id, selectedPage],

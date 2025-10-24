@@ -34,6 +34,24 @@ export const monitoringApi = {
     return response.data;
   },
 
+  // Créer un site
+  createSite: async (siteData) => {
+    const response = await api.post('/sites', siteData);
+    return response.data;
+  },
+
+  // Modifier un site
+  updateSite: async (siteId, siteData) => {
+    const response = await api.put(`/sites/${siteId}`, siteData);
+    return response.data;
+  },
+
+  // Supprimer un site
+  deleteSite: async (siteId) => {
+    const response = await api.delete(`/sites/${siteId}`);
+    return response.data;
+  },
+
   // Mesurer PageSpeed d'un site
   measurePageSpeed: async (siteId, strategy = 'mobile') => {
     const response = await api.post(`/sites/${siteId}/pagespeed`, { strategy });
